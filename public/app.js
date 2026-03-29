@@ -50,10 +50,10 @@ const STATIONS = {
     ],
   },
   board: {
-    home: { x: 4.95, y: 7.65, face: 'right' },
+    home: { x: 3.65, y: 6.85, face: 'down' },
     idle: [
-      { x: 3.8, y: 9.35 },
-      { x: 6.25, y: 9.1 },
+      { x: 2.8, y: 8.3 },
+      { x: 5.2, y: 8.1 },
     ],
   },
 };
@@ -65,6 +65,7 @@ const FURNITURE_LAYOUT = [
   { image: 'clock', col: 20, row: 1 },
   { image: 'hangingPlant', col: 5, row: 1 },
   { image: 'hangingPlant', col: 16, row: 1 },
+  { image: 'desk', col: 2, row: 6 },
   { image: 'desk', col: 8, row: 7 },
   { image: 'desk', col: 14, row: 6 },
   { image: 'table', col: 3, row: 9 },
@@ -670,6 +671,7 @@ function drawFurniture(scale, timeSeconds) {
   const palette = runtimePalette(state.snapshot?.runtime?.status);
   const dynamicItems = [
     ...FURNITURE_LAYOUT,
+    { image: pcFrame, col: 2, row: 5 },
     { image: pcFrame, col: 8, row: 6 },
     { image: pcFrame, col: 14, row: 5 },
   ];
