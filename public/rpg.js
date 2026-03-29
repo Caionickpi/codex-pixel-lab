@@ -5,6 +5,8 @@ export const TITLE_LADDER = [
     title: 'New Recruit',
     flavor: 'Booting the first workstation.',
     unlocks: ['Starter Loft scene', 'Basic desk rig'],
+    perks: ['Starter wallet', 'Base HQ sync'],
+    bonus: { coinBonus: 0, editXpBonus: 0, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 3,
@@ -12,6 +14,8 @@ export const TITLE_LADDER = [
     title: 'Repo Builder',
     flavor: 'Shipping consistently and wiring better tools.',
     unlocks: ['Signal Hub scene', 'Dual Rig upgrade'],
+    perks: ['+3% studio XP', 'More build momentum'],
+    bonus: { coinBonus: 0, editXpBonus: 0.03, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 5,
@@ -19,6 +23,8 @@ export const TITLE_LADDER = [
     title: 'Night Shift Captain',
     flavor: 'Owns the late-night sprint glow.',
     unlocks: ['Neon Loft scene', 'Window Garden upgrade'],
+    perks: ['+4% coins', 'Night shift aura'],
+    bonus: { coinBonus: 0.04, editXpBonus: 0, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 7,
@@ -26,6 +32,8 @@ export const TITLE_LADDER = [
     title: 'Commit Ranger',
     flavor: 'Navigates repos with calm precision.',
     unlocks: ['Server Vault scene', 'Scout Prime upgrade'],
+    perks: ['+5% office power', 'Scout command lane'],
+    bonus: { coinBonus: 0, editXpBonus: 0, officePowerBonus: 0.05, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 9,
@@ -33,6 +41,8 @@ export const TITLE_LADDER = [
     title: 'Merge Specialist',
     flavor: 'Turns chaos into release nights.',
     unlocks: ['Cloud Deck scene', 'Helper Drone upgrade'],
+    perks: ['-3% shop cost', 'Cleaner office scaling'],
+    bonus: { coinBonus: 0, editXpBonus: 0, officePowerBonus: 0, fabricationDiscount: 0.03, prestigeBonus: 0 },
   },
   {
     level: 12,
@@ -40,6 +50,8 @@ export const TITLE_LADDER = [
     title: 'Ship Architect',
     flavor: 'Designs the whole floor, not just the patch.',
     unlocks: ['Sky Forge scene', 'Legendary Rig upgrade'],
+    perks: ['+6% studio XP', 'Build architect bonus'],
+    bonus: { coinBonus: 0, editXpBonus: 0.06, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 15,
@@ -47,6 +59,8 @@ export const TITLE_LADDER = [
     title: 'Pixel Legend',
     flavor: 'Your office feels like an endgame build.',
     unlocks: ['Orbital Bay scene', 'Arcade Corner upgrade'],
+    perks: ['+8% office power', 'Legend floor glow'],
+    bonus: { coinBonus: 0, editXpBonus: 0, officePowerBonus: 0.08, fabricationDiscount: 0, prestigeBonus: 0 },
   },
   {
     level: 18,
@@ -54,6 +68,8 @@ export const TITLE_LADDER = [
     title: 'Release Conductor',
     flavor: 'Every system in the room answers to your shipping rhythm.',
     unlocks: ['Afterglow Deck scene', 'Night Shift Vending upgrade'],
+    perks: ['+7% coins', '+5% prestige'],
+    bonus: { coinBonus: 0.07, editXpBonus: 0, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0.05 },
   },
   {
     level: 22,
@@ -61,6 +77,8 @@ export const TITLE_LADDER = [
     title: 'Studio Overlord',
     flavor: 'The office now feels like a legendary dev base.',
     unlocks: ['Prestige aura', 'Studio trophy flex'],
+    perks: ['Master XP boost', 'Mythic room efficiency'],
+    bonus: { coinBonus: 0.1, editXpBonus: 0.08, officePowerBonus: 0.12, fabricationDiscount: 0.06, prestigeBonus: 0.08 },
   },
 ];
 
@@ -822,6 +840,31 @@ export function getUpgradeById(id) {
   return UPGRADE_DEFS.find((upgrade) => upgrade.id === id) || null;
 }
 
+function deriveDevBonuses(level) {
+  return TITLE_LADDER.filter((entry) => level >= entry.level).reduce(
+    (sum, entry) => ({
+      coinBonus: sum.coinBonus + Number(entry.bonus?.coinBonus || 0),
+      editXpBonus: sum.editXpBonus + Number(entry.bonus?.editXpBonus || 0),
+      officePowerBonus: sum.officePowerBonus + Number(entry.bonus?.officePowerBonus || 0),
+      fabricationDiscount: sum.fabricationDiscount + Number(entry.bonus?.fabricationDiscount || 0),
+      prestigeBonus: sum.prestigeBonus + Number(entry.bonus?.prestigeBonus || 0),
+    }),
+    { coinBonus: 0, editXpBonus: 0, officePowerBonus: 0, fabricationDiscount: 0, prestigeBonus: 0 },
+  );
+}
+
+function getNextThemeUnlock(level) {
+  return Object.values(THEME_DEFS)
+    .sort((left, right) => left.unlockLevel - right.unlockLevel)
+    .find((theme) => theme.unlockLevel > level) || null;
+}
+
+function getNextUpgradeUnlock(level, purchasedIds) {
+  return UPGRADE_DEFS
+    .filter((upgrade) => !purchasedIds.includes(upgrade.id) && upgrade.unlockLevel > level)
+    .sort((left, right) => left.unlockLevel - right.unlockLevel || left.cost - right.cost)[0] || null;
+}
+
 function normalizeStoredState(stored = {}) {
   const visitedThemeIds = Array.isArray(stored.visitedThemeIds) ? [...new Set(stored.visitedThemeIds.filter((id) => typeof id === 'string'))] : [];
   const purchaseCosts =
@@ -843,12 +886,13 @@ function normalizeStoredState(stored = {}) {
   };
 }
 
-function deriveCoinsEarned(player) {
+function deriveCoinsEarned(player, devBonuses = {}) {
   const commits = Number(player?.progression?.totalCommits || 0);
   const repos = Number(player?.profile?.repositories || 0);
   const followers = Number(player?.profile?.followers || 0);
   const level = Number(player?.progression?.level || 1);
-  return Math.max(180, Math.floor(commits * 3.6 + repos * 90 + followers * 28 + level * 120));
+  const baseCoins = commits * 3.6 + repos * 90 + followers * 28 + level * 120;
+  return Math.max(180, Math.floor(baseCoins * (1 + Number(devBonuses.coinBonus || 0))));
 }
 
 function rarityWeight(rarity) {
@@ -956,7 +1000,7 @@ function buildStudioExpansions(officeLevel) {
   }));
 }
 
-function deriveOfficeState({ player, purchasedIds, builderXp, builderActions, visitedThemeIds, activeTheme }) {
+function deriveOfficeState({ player, purchasedIds, builderXp, builderActions, visitedThemeIds, activeTheme, devBonuses }) {
   const level = deriveOfficeLevel(builderXp);
   const currentTier = getCurrentOfficeTier(level);
   const nextTier = getNextOfficeTier(level);
@@ -974,11 +1018,11 @@ function deriveOfficeState({ player, purchasedIds, builderXp, builderActions, vi
   const automationLevel = modules.find((module) => module.id === 'automation-spine')?.level || 0;
   const architectLevel = modules.find((module) => module.id === 'architect-core')?.level || 0;
 
-  const editXpBonus = [0, 0.08, 0.14, 0.2, 0.28][plannerLevel];
-  const officePowerBonus = [0, 0.06, 0.1, 0.15, 0.22][powerGridLevel];
-  const fabricationDiscount = [0, 0.02, 0.04, 0.07, 0.1][fabricationLevel];
+  const editXpBonus = [0, 0.08, 0.14, 0.2, 0.28][plannerLevel] + Number(devBonuses?.editXpBonus || 0);
+  const officePowerBonus = [0, 0.06, 0.1, 0.15, 0.22][powerGridLevel] + Number(devBonuses?.officePowerBonus || 0);
+  const fabricationDiscount = [0, 0.02, 0.04, 0.07, 0.1][fabricationLevel] + Number(devBonuses?.fabricationDiscount || 0);
   const roomSlots = 1 + automationLevel;
-  const prestigeBonus = [0, 0.04, 0.08, 0.12, 0.18][architectLevel];
+  const prestigeBonus = [0, 0.04, 0.08, 0.12, 0.18][architectLevel] + Number(devBonuses?.prestigeBonus || 0);
 
   const basePower =
     purchasedIds.reduce((sum, id) => {
@@ -1008,11 +1052,13 @@ function deriveOfficeState({ player, purchasedIds, builderXp, builderActions, vi
       fabricationDiscount,
       roomSlots,
       prestigeBonus,
+      coinBonus: Number(devBonuses?.coinBonus || 0),
     },
     modules,
     expansions,
     currentExpansion: expansions.find((entry) => entry.current) || expansions[0],
     nextExpansion: expansions.find((entry) => entry.upcoming) || null,
+    nextModule: modules.find((module) => !module.unlocked) || null,
   };
 }
 
@@ -1021,6 +1067,7 @@ export function computeRpgState(player, stored = {}) {
   const level = Number(player?.progression?.level || 1);
   const currentTitle = getCurrentTitle(level);
   const nextTitle = getNextTitle(level);
+  const devBonuses = deriveDevBonuses(level);
   const unlockedThemes = getUnlockedThemes(level);
   const purchasedIds = normalized.purchasedIds.filter((id) => Boolean(getUpgradeById(id)));
   const purchaseCosts = Object.fromEntries(
@@ -1041,8 +1088,9 @@ export function computeRpgState(player, stored = {}) {
     builderActions,
     visitedThemeIds: normalized.visitedThemeIds,
     activeTheme,
+    devBonuses,
   });
-  const coinsEarned = deriveCoinsEarned(player);
+  const coinsEarned = deriveCoinsEarned(player, devBonuses);
   const coinsSpent = spentCoins(purchasedIds, purchaseCosts);
   const coins = Math.max(0, coinsEarned - coinsSpent);
   const upgradeCatalog = UPGRADE_DEFS.map((upgrade) => ({
@@ -1056,6 +1104,12 @@ export function computeRpgState(player, stored = {}) {
     owned: purchasedIds.includes(upgrade.id),
     affordable: coins >= (purchasedIds.includes(upgrade.id) ? Number(purchaseCosts[upgrade.id] || upgrade.cost) : Math.max(20, Math.round(upgrade.cost * (1 - office.bonuses.fabricationDiscount)))),
   }));
+  const nextThemeUnlock = getNextThemeUnlock(level);
+  const nextUpgradeUnlock = getNextUpgradeUnlock(level, purchasedIds);
+  const nextAvailableUpgrade =
+    upgradeCatalog.find((upgrade) => !upgrade.owned && upgrade.unlocked && upgrade.affordable) ||
+    upgradeCatalog.find((upgrade) => !upgrade.owned && upgrade.unlocked) ||
+    null;
 
   const loadout = {
     scene: activeTheme.name,
@@ -1076,6 +1130,14 @@ export function computeRpgState(player, stored = {}) {
     level,
     currentTitle,
     nextTitle,
+    developer: {
+      bonuses: devBonuses,
+      nextThemeUnlock,
+      nextUpgradeUnlock,
+      nextAvailableUpgrade,
+      currentPerks: currentTitle.perks || [],
+      nextPerks: nextTitle?.perks || [],
+    },
     titleRoadmap: TITLE_LADDER.map((entry) => ({
       ...entry,
       unlocked: level >= entry.level,

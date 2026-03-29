@@ -96,12 +96,23 @@ const dom = {
   debugLabel: document.getElementById('debugLabel'),
   gitLabel: document.getElementById('gitLabel'),
   feedLabel: document.getElementById('feedLabel'),
+  devTrackLevel: document.getElementById('devTrackLevel'),
+  devTrackFill: document.getElementById('devTrackFill'),
+  devTrackCurrent: document.getElementById('devTrackCurrent'),
+  devTrackNext: document.getElementById('devTrackNext'),
+  officeTrackLevel: document.getElementById('officeTrackLevel'),
+  officeTrackFill: document.getElementById('officeTrackFill'),
+  officeTrackCurrent: document.getElementById('officeTrackCurrent'),
+  officeTrackNext: document.getElementById('officeTrackNext'),
+  nextUnlockLabel: document.getElementById('nextUnlockLabel'),
   playerGlance: document.getElementById('playerGlance'),
   playerAvatarMini: document.getElementById('playerAvatarMini'),
   playerNameMini: document.getElementById('playerNameMini'),
   playerLevelMini: document.getElementById('playerLevelMini'),
   playerCommitMini: document.getElementById('playerCommitMini'),
   playerCoinMini: document.getElementById('playerCoinMini'),
+  playerGlanceFill: document.getElementById('playerGlanceFill'),
+  playerGlanceNext: document.getElementById('playerGlanceNext'),
   menuButton: document.getElementById('menuButton'),
   gameMenu: document.getElementById('gameMenu'),
   gameMenuBackdrop: document.getElementById('gameMenuBackdrop'),
@@ -117,9 +128,14 @@ const dom = {
   menuCoinLabel: document.getElementById('menuCoinLabel'),
   menuCoinCount: document.getElementById('menuCoinCount'),
   menuHeroCopy: document.getElementById('menuHeroCopy'),
+  menuDevLabel: document.getElementById('menuDevLabel'),
+  menuDevCount: document.getElementById('menuDevCount'),
+  menuDevCopy: document.getElementById('menuDevCopy'),
+  menuDevFill: document.getElementById('menuDevFill'),
   menuOwnedLabel: document.getElementById('menuOwnedLabel'),
   menuOwnedCount: document.getElementById('menuOwnedCount'),
   menuOwnedCopy: document.getElementById('menuOwnedCopy'),
+  menuOwnedFill: document.getElementById('menuOwnedFill'),
   menuThemeLabel: document.getElementById('menuThemeLabel'),
   menuThemeName: document.getElementById('menuThemeName'),
   menuThemeMood: document.getElementById('menuThemeMood'),
@@ -176,11 +192,11 @@ const state = {
 
 const MENU_TABS = ['hq', 'shop', 'scenes', 'inventory'];
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All systems', copy: 'Full room collection.' },
-  { id: 'computer', label: 'Computer Lab', copy: 'Rigs, cooling, wall screens.' },
-  { id: 'systems', label: 'Studio Systems', copy: 'Ops, sync, live signals.' },
-  { id: 'atmosphere', label: 'Atmosphere', copy: 'Lighting, lounge, identity.' },
-  { id: 'agents', label: 'Agents', copy: 'Scout, Trace, support bots.' },
+  { id: 'all', label: 'All systems', copy: 'Full collection' },
+  { id: 'computer', label: 'Computer Lab', copy: 'Rigs and command decks' },
+  { id: 'systems', label: 'Studio Systems', copy: 'Ops and live signal gear' },
+  { id: 'atmosphere', label: 'Atmosphere', copy: 'Mood, lounge, identity' },
+  { id: 'agents', label: 'Agents', copy: 'Specialists and support bots' },
 ];
 
 function safeJsonParse(input, fallback = null) {
@@ -1714,22 +1730,28 @@ function renderWalletStrip(rpg) {
     <div class="wallet-card wallet-card--coins">
       <span class="wallet-label">Coins</span>
       <strong>${formatCount(rpg.coins)}</strong>
-      <span class="wallet-copy">${formatCount(rpg.coinsEarned)} earned | ${formatCount(rpg.coinsSpent)} invested back into the base.</span>
+      <span class="wallet-copy">${formatCount(rpg.coinsEarned)} earned | ${formatCount(rpg.coinsSpent)} spent</span>
     </div>
-    <div class="wallet-card">
+    <div class="wallet-card wallet-card--track">
+      <span class="wallet-label">Dev XP</span>
+      <strong>Level ${state.player?.progression?.level || 1}</strong>
+      <div class="wallet-track">
+        <div class="wallet-track-fill" style="width:${Math.max(6, clampPercent(state.player?.progression?.progress || 0.04))}%"></div>
+      </div>
+      <span class="wallet-copy">${formatCount(state.player?.progression?.commitsToNextLevel || 0)} commits to next</span>
+    </div>
+    <div class="wallet-card wallet-card--track">
       <span class="wallet-label">Studio XP</span>
       <strong>${formatCount(office.builderXp)}</strong>
-      <span class="wallet-copy">${formatCount(office.xpToNext)} XP to reach ${office.nextTier ? office.nextTier.name : 'max tier'}.</span>
+      <div class="wallet-track">
+        <div class="wallet-track-fill" style="width:${Math.max(6, clampPercent(office.progress))}%"></div>
+      </div>
+      <span class="wallet-copy">${formatCount(office.xpToNext)} XP to ${office.nextTier ? office.nextTier.name : 'cap'}</span>
     </div>
     <div class="wallet-card">
-      <span class="wallet-label">Office power</span>
+      <span class="wallet-label">HQ power</span>
       <strong>${formatCount(office.power)}</strong>
-      <span class="wallet-copy">Reactive power from upgrades, themes, and service modules.</span>
-    </div>
-    <div class="wallet-card">
-      <span class="wallet-label">Builder HQ</span>
-      <strong>${office.currentTier.name}</strong>
-      <span class="wallet-copy">${office.currentExpansion.name} online | ${office.modules.filter((module) => module.unlocked).length} modules active.</span>
+      <span class="wallet-copy">${office.currentExpansion.name} | ${office.modules.filter((module) => module.unlocked).length} modules online</span>
     </div>
   `;
 }
@@ -1743,8 +1765,10 @@ function renderTitleRoadmap(rpg) {
             <span>Level ${title.level}</span>
             <strong>${title.title}</strong>
           </div>
-          <p>${title.flavor}</p>
-          <div class="title-unlocks">${title.unlocks.join(' | ')}</div>
+          <div class="title-unlocks">
+            ${(title.perks || []).map((perk) => `<span>${perk}</span>`).join('')}
+            <span>${title.unlocks[0]}</span>
+          </div>
         </article>
       `,
     )
@@ -1754,21 +1778,21 @@ function renderTitleRoadmap(rpg) {
 function renderLoadout(rpg) {
   const office = rpg.office;
   dom.playerLoadout.innerHTML = [
-    ['Current title', rpg.currentTitle.title, rpg.currentTitle.flavor],
-    ['Builder HQ', office.currentTier.name, office.currentTier.flavor],
-    ['Scene', rpg.loadout.scene, rpg.loadout.sceneMood],
-    ['Desk rig', rpg.loadout.deskRig, 'Hardware tier currently active in the office.'],
-    ['Office power', formatCount(office.power), 'Power rises with high-tier desks, modules, and stronger room expansions.'],
+    ['Current title', rpg.currentTitle.title, (rpg.currentTitle.perks || []).join(' | ') || rpg.currentTitle.flavor],
+    ['Builder HQ', office.currentTier.name, office.currentExpansion.name],
+    ['Scene', rpg.loadout.scene, themeTraitList(rpg.activeTheme).join(' | ')],
+    ['Desk rig', rpg.loadout.deskRig, 'Main workstation online'],
+    ['Office power', formatCount(office.power), 'Power from gear + modules'],
     [
       'Service modules',
       rpg.loadout.modules.length ? rpg.loadout.modules.join(' | ') : 'Starter planner only',
-      'Persistent systems that boost build flow, discounts, and room prestige.',
+      'Persistent systems online',
     ],
-    ['Agents', rpg.loadout.agents.join(' | '), 'Roles and upgrades currently represented in the room.'],
+    ['Agents', rpg.loadout.agents.join(' | '), 'Active team in the room'],
     [
       'Office perks',
       rpg.loadout.officePerks.length ? rpg.loadout.officePerks.join(' | ') : 'Starter setup',
-      'Owned upgrades already applied to the environment.',
+      'Upgrades currently applied',
     ],
   ]
     .map(
@@ -1827,7 +1851,9 @@ function renderUpgradeShop(rpg) {
               <strong>${upgrade.name}</strong>
             </div>
           </div>
-          <p>${upgrade.description}</p>
+          <div class="upgrade-chip-row">
+            ${upgradeTraitList(upgrade).slice(0, 2).map((item) => `<span>${item}</span>`).join('')}
+          </div>
           <div class="upgrade-meta">
             <span>${upgradeStatusLabel(upgrade)}</span>
             <button
@@ -1981,6 +2007,65 @@ function menuRarityTone(rarity) {
   return tones[rarity] || '#8ff3cf';
 }
 
+function clampPercent(value) {
+  return Math.max(0, Math.min(100, Math.round(Number(value || 0) * 100)));
+}
+
+function compactMilestoneLabel(rpg, player = state.player) {
+  if (!rpg) return 'Next unlock: link GitHub progress';
+  if (rpg.developer?.nextAvailableUpgrade) {
+    return `Next unlock: ${rpg.developer.nextAvailableUpgrade.name} is ready in the shop`;
+  }
+  if (rpg.developer?.nextTitle && player?.progression) {
+    return `Next unlock: ${rpg.developer.nextTitle.title} in ${formatCount(player.progression.commitsToNextLevel)} commits`;
+  }
+  if (rpg.office?.nextExpansion) {
+    return `Next unlock: ${rpg.office.nextExpansion.name} at HQ Lv ${rpg.office.nextExpansion.level}`;
+  }
+  if (rpg.developer?.nextThemeUnlock) {
+    return `Next unlock: ${rpg.developer.nextThemeUnlock.name} at Lv ${rpg.developer.nextThemeUnlock.unlockLevel}`;
+  }
+  if (rpg.developer?.nextUpgradeUnlock) {
+    return `Next unlock: ${rpg.developer.nextUpgradeUnlock.name} at Lv ${rpg.developer.nextUpgradeUnlock.unlockLevel}`;
+  }
+  return 'Next unlock: current prestige cap reached';
+}
+
+function renderProgressRail() {
+  if (!state.player?.ok || !state.rpg) {
+    dom.devTrackLevel.textContent = 'Level 1';
+    dom.devTrackFill.style.width = '6%';
+    dom.devTrackCurrent.textContent = '0 commits';
+    dom.devTrackNext.textContent = 'sync GitHub to load';
+    dom.officeTrackLevel.textContent = 'Workbench Den';
+    dom.officeTrackFill.style.width = '6%';
+    dom.officeTrackCurrent.textContent = '0 studio XP';
+    dom.officeTrackNext.textContent = '0 to next tier';
+    dom.nextUnlockLabel.textContent = 'Next unlock: link GitHub progress';
+    dom.playerGlanceFill.style.width = '6%';
+    dom.playerGlanceNext.textContent = 'sync required';
+    return;
+  }
+
+  const progression = state.player.progression;
+  const rpg = state.rpg;
+  dom.devTrackLevel.textContent = `Level ${progression.level}`;
+  dom.devTrackFill.style.width = `${Math.max(6, clampPercent(progression.progress))}%`;
+  dom.devTrackCurrent.textContent = `${formatCount(progression.totalCommits)} commits banked`;
+  dom.devTrackNext.textContent = `${formatCount(progression.commitsToNextLevel)} to next level`;
+
+  dom.officeTrackLevel.textContent = rpg.office.currentTier.name;
+  dom.officeTrackFill.style.width = `${Math.max(6, clampPercent(rpg.office.progress))}%`;
+  dom.officeTrackCurrent.textContent = `${formatCount(rpg.office.builderXp)} studio XP`;
+  dom.officeTrackNext.textContent = rpg.office.nextTier
+    ? `${formatCount(rpg.office.xpToNext)} to ${rpg.office.nextTier.name}`
+    : 'HQ prestige cap reached';
+
+  dom.nextUnlockLabel.textContent = compactMilestoneLabel(rpg, state.player);
+  dom.playerGlanceFill.style.width = `${Math.max(6, clampPercent(progression.progress))}%`;
+  dom.playerGlanceNext.textContent = `${formatCount(progression.commitsToNextLevel)} to next`;
+}
+
 function filteredUpgradeCatalog(rpg) {
   if (!rpg) return [];
   if (state.shopFilter === 'all') return rpg.upgradeCatalog;
@@ -2054,13 +2139,19 @@ function renderShopSpotlight(rpg, catalog) {
       ? `${nextUpgrade.name} ready to buy`
       : `${nextUpgrade.name} at level ${nextUpgrade.unlockLevel}`
     : 'All upgrades in this lane purchased';
+  const spotlightTraits = nextUpgrade ? upgradeTraitList(nextUpgrade).slice(0, 3) : ['Collection clear', 'Prestige room', 'Fully built'];
 
   dom.menuShopSpotlight.className = `menu-shop-spotlight ${state.shopFilter === 'computer' ? 'is-computer' : ''}`;
   dom.menuShopSpotlight.innerHTML = `
     <div class="menu-shop-spotlight-copy">
       <span class="info-kicker">${filter.label}</span>
       <h4>${heroTitle}</h4>
-      <p>${heroCopy}</p>
+      <div class="menu-impact menu-impact--visual">
+        ${spotlightTraits.map((item) => `<span>${item}</span>`).join('')}
+      </div>
+      <div class="menu-shop-hero-visual">
+        ${renderUpgradeArt(nextUpgrade?.icon || (state.shopFilter === 'computer' ? 'master-desk' : 'monitor-wall'), 'card')}
+      </div>
     </div>
     <div class="menu-shop-spotlight-metrics">
       <div class="shop-metric">
@@ -2076,16 +2167,12 @@ function renderShopSpotlight(rpg, catalog) {
         <strong>${nextLabel}</strong>
       </div>
       <div class="shop-metric">
-        <span>Builder HQ</span>
-        <strong>${rpg.office.currentTier.name}</strong>
-      </div>
-      <div class="shop-metric">
-        <span>Office power</span>
-        <strong>${formatCount(rpg.office.power)}</strong>
-      </div>
-      <div class="shop-metric">
         <span>Wallet</span>
-        <strong>${formatCount(rpg.coins)} coins | ${formatCount(rpg.office.builderXp)} XP</strong>
+        <strong>${formatCount(rpg.coins)} coins</strong>
+      </div>
+      <div class="shop-metric">
+        <span>HQ power</span>
+        <strong>${formatCount(rpg.office.power)}</strong>
       </div>
     </div>
   `;
@@ -2339,10 +2426,15 @@ function renderGameMenu() {
     );
     dom.menuCoinLabel.textContent = 'Wallet';
     dom.menuCoinCount.textContent = `${formatCount(previewRpg.coins)} coins`;
-    dom.menuHeroCopy.textContent = 'Preview mode is live. Link GitHub progress to turn this into your real builder profile.';
+    dom.menuHeroCopy.textContent = 'Preview wallet for the builder loop.';
+    dom.menuDevLabel.textContent = 'Dev track';
+    dom.menuDevCount.textContent = 'Level 1';
+    dom.menuDevCopy.textContent = 'Link GitHub to load real commit XP.';
+    dom.menuDevFill.style.width = '6%';
     dom.menuOwnedLabel.textContent = 'Builder HQ';
     dom.menuOwnedCount.textContent = previewRpg.office.currentTier.name;
-    dom.menuOwnedCopy.textContent = `Lv ${previewRpg.office.level} | ${formatCount(previewRpg.office.power)} office power`;
+    dom.menuOwnedCopy.textContent = `${formatCount(previewRpg.office.xpToNext)} XP to next tier`;
+    dom.menuOwnedFill.style.width = `${Math.max(6, clampPercent(previewRpg.office.progress))}%`;
     dom.menuThemeLabel.textContent = 'Active scene';
     dom.menuThemeName.textContent = previewRpg.activeTheme.name;
     dom.menuThemeMood.textContent = 'Preview loadout for the office-builder loop.';
@@ -2352,7 +2444,11 @@ function renderGameMenu() {
       <div class="menu-shop-spotlight-copy">
         <span class="info-kicker">Office Shop</span>
         <h4>Preview mode</h4>
-        <p>Link GitHub progress to unlock the live catalog, persistent coins, and your real builder progression.</p>
+        <div class="menu-impact menu-impact--visual">
+          <span>Wallet locked</span>
+          <span>Live shop after sync</span>
+          <span>GitHub-powered progress</span>
+        </div>
       </div>
     `;
     dom.menuShopFilters.innerHTML = '';
@@ -2367,13 +2463,20 @@ function renderGameMenu() {
   const ownedCount = rpg.upgradeCatalog.filter((upgrade) => upgrade.owned).length;
   dom.menuCoinLabel.textContent = 'Wallet';
   dom.menuCoinCount.textContent = `${formatCount(rpg.coins)} coins`;
-  dom.menuHeroCopy.textContent = `${formatCount(rpg.coinsEarned)} earned | ${formatCount(rpg.coinsSpent)} reinvested into the office.`;
+  dom.menuHeroCopy.textContent = `${formatCount(rpg.coinsSpent)} spent | ${formatCount(rpg.coinsEarned)} earned`;
+  dom.menuDevLabel.textContent = 'Dev track';
+  dom.menuDevCount.textContent = `Level ${state.player.progression.level}`;
+  dom.menuDevCopy.textContent = `${formatCount(state.player.progression.commitsToNextLevel)} commits to ${state.player.progression.level + 1}`;
+  dom.menuDevFill.style.width = `${Math.max(6, clampPercent(state.player.progression.progress))}%`;
   dom.menuOwnedLabel.textContent = 'Builder HQ';
   dom.menuOwnedCount.textContent = rpg.office.currentTier.name;
-  dom.menuOwnedCopy.textContent = `Lv ${rpg.office.level} | ${formatCount(rpg.office.power)} office power | ${ownedCount} owned upgrades`;
+  dom.menuOwnedCopy.textContent = rpg.office.nextTier
+    ? `${formatCount(rpg.office.xpToNext)} XP to ${rpg.office.nextTier.name}`
+    : 'Mythic office tier reached';
+  dom.menuOwnedFill.style.width = `${Math.max(6, clampPercent(rpg.office.progress))}%`;
   dom.menuThemeLabel.textContent = 'Active scene';
   dom.menuThemeName.textContent = rpg.activeTheme.name;
-  dom.menuThemeMood.textContent = rpg.activeTheme.mood;
+  dom.menuThemeMood.textContent = `${ownedCount} owned upgrades | ${formatCount(rpg.office.power)} power`;
 
   renderMenuHQ(rpg);
   renderMenuShop(rpg);
@@ -2393,6 +2496,7 @@ function renderPlayerProfile() {
     dom.playerLevelMini.textContent = 'Level unavailable';
     dom.playerCommitMini.textContent = player?.error || 'Run gh auth login';
     dom.playerCoinMini.textContent = '0 coins';
+    dom.playerGlanceNext.textContent = 'sync required';
 
     dom.profileSource.textContent = `Selected via ${actorName}`;
     dom.playerName.textContent = state.playerLoading ? 'Loading profile...' : 'GitHub not linked';
@@ -2410,6 +2514,7 @@ function renderPlayerProfile() {
     dom.upgradeShop.innerHTML = '<div class="profile-empty">Upgrade shop will appear once coins are available.</div>';
     dom.playerProjects.innerHTML = '<div class="profile-empty">No GitHub projects available.</div>';
     renderRecentWorkspaceList();
+    renderProgressRail();
     renderGameMenu();
     return;
   }
@@ -2429,6 +2534,7 @@ function renderPlayerProfile() {
   dom.playerLevelMini.textContent = `Level ${progression.level} | ${currentTitle.title}`;
   dom.playerCommitMini.textContent = `${formatCount(progression.totalCommits)} commits`;
   dom.playerCoinMini.textContent = `${formatCount(rpg.coins)} coins`;
+  dom.playerGlanceNext.textContent = `${formatCount(progression.commitsToNextLevel)} to next`;
 
   dom.profileSource.textContent = sourceLabel;
   dom.playerName.textContent = profile.name;
@@ -2437,7 +2543,7 @@ function renderPlayerProfile() {
   dom.playerLevel.textContent = `Level ${progression.level}`;
   dom.playerRank.textContent = currentTitle.title;
   dom.playerProgressBar.style.width = `${Math.max(6, Math.round(progression.progress * 100))}%`;
-  dom.playerProgressText.textContent = `${formatCount(progression.commitsToNextLevel)} commits to reach level ${progression.level + 1}`;
+  dom.playerProgressText.textContent = `${formatCount(progression.totalCommits)} commits banked | ${formatCount(progression.commitsToNextLevel)} to level ${progression.level + 1}`;
   renderWalletStrip(rpg);
 
   dom.playerStats.innerHTML = [
@@ -2482,11 +2588,18 @@ function renderPlayerProfile() {
   }
 
   renderRecentWorkspaceList();
+  renderProgressRail();
   renderGameMenu();
 }
 
 function renderMenuHQ(rpg) {
   const office = rpg.office;
+  const devProgress = state.player?.progression || {
+    level: rpg.level,
+    totalCommits: 0,
+    commitsToNextLevel: 120,
+    progress: 0.04,
+  };
   const nextTierLabel = office.nextTier ? `${office.nextTier.name} at Lv ${office.nextTier.level}` : 'Mythic cap reached';
   const moduleMarkup = office.modules
     .map(
@@ -2501,8 +2614,10 @@ function renderMenuHQ(rpg) {
               <strong>${module.name}</strong>
             </div>
           </div>
-          <p>${module.effect}</p>
-          <div class="builder-module-state">${module.maxed ? 'Maxed module' : module.unlocked ? 'Online' : 'Offline'}</div>
+          <div class="builder-module-level">
+            ${Array.from({ length: 4 }, (_, index) => `<span class="${index < module.level ? 'is-on' : ''}"></span>`).join('')}
+          </div>
+          <div class="builder-module-state">${module.maxed ? 'Maxed module' : module.unlocked ? module.effect : `Unlock at Lv ${module.unlockLevel}`}</div>
         </article>
       `,
     )
@@ -2520,7 +2635,6 @@ function renderMenuHQ(rpg) {
               <span>${expansion.unlocked ? `Unlocked at Lv ${expansion.level}` : `Unlock Lv ${expansion.level}`}</span>
               <strong>${expansion.name}</strong>
             </div>
-            <p>${expansion.summary}</p>
             <div class="builder-expansion-reward">${expansion.reward}</div>
           </div>
         </article>
@@ -2530,34 +2644,34 @@ function renderMenuHQ(rpg) {
 
   const bonusItems = [
     {
-      label: 'Edit XP',
+      label: 'Studio XP',
       value: `+${Math.round(office.bonuses.editXpBonus * 100)}%`,
-      copy: 'Room edits and unlock actions pay more Studio XP.',
+      copy: 'Faster room growth',
     },
     {
       label: 'Fabrication',
       value: `-${Math.round(office.bonuses.fabricationDiscount * 100)}%`,
-      copy: 'Shop discount from the fabrication lane.',
+      copy: 'Cheaper upgrades',
     },
     {
       label: 'Power grid',
       value: `+${Math.round(office.bonuses.officePowerBonus * 100)}%`,
-      copy: 'Extra office power routed into the room.',
+      copy: 'More room power',
     },
     {
       label: 'Room slots',
       value: `${office.bonuses.roomSlots}`,
-      copy: 'How many advanced support lanes the office can sustain.',
+      copy: 'Support lanes online',
     },
     {
       label: 'Prestige',
       value: `+${Math.round(office.bonuses.prestigeBonus * 100)}%`,
-      copy: 'Late-game builder synergy from the Architect Core.',
+      copy: 'Late game aura',
     },
     {
       label: 'Builder actions',
       value: `${formatCount(office.builderActions)}`,
-      copy: 'Purchases and scene activations tracked as build progress.',
+      copy: 'Tracked build steps',
     },
   ]
     .map(
@@ -2571,11 +2685,99 @@ function renderMenuHQ(rpg) {
     )
     .join('');
 
+  const milestoneCards = [
+    rpg.nextTitle
+      ? {
+          label: 'Next title',
+          value: rpg.nextTitle.title,
+          meta: `${formatCount(devProgress.commitsToNextLevel)} commits left`,
+          art: 'trophy-shelf',
+        }
+      : {
+          label: 'Next title',
+          value: 'Title cap reached',
+          meta: 'All titles unlocked',
+          art: 'trophy-shelf',
+        },
+    rpg.developer?.nextThemeUnlock
+      ? {
+          label: 'Next scene',
+          value: rpg.developer.nextThemeUnlock.name,
+          meta: `Unlocks at Lv ${rpg.developer.nextThemeUnlock.unlockLevel}`,
+          art: 'monitor-wall',
+        }
+      : {
+          label: 'Next scene',
+          value: rpg.activeTheme.name,
+          meta: 'Highest scene unlocked',
+          art: 'monitor-wall',
+        },
+    rpg.developer?.nextAvailableUpgrade
+      ? {
+          label: 'Shop target',
+          value: rpg.developer.nextAvailableUpgrade.name,
+          meta: `${formatCount(rpg.developer.nextAvailableUpgrade.price)} coins`,
+          art: rpg.developer.nextAvailableUpgrade.icon,
+        }
+      : rpg.developer?.nextUpgradeUnlock
+        ? {
+            label: 'Shop target',
+            value: rpg.developer.nextUpgradeUnlock.name,
+            meta: `Unlocks at Lv ${rpg.developer.nextUpgradeUnlock.unlockLevel}`,
+            art: rpg.developer.nextUpgradeUnlock.icon,
+          }
+        : {
+            label: 'Shop target',
+            value: 'Catalog cleared',
+            meta: 'All major upgrades owned',
+            art: 'master-desk',
+          },
+    office.nextExpansion
+      ? {
+          label: 'Base growth',
+          value: office.nextExpansion.name,
+          meta: `${formatCount(office.xpToNext)} XP to unlock`,
+          art: office.nextExpansion.artIcon,
+        }
+      : office.nextModule
+        ? {
+            label: 'Base growth',
+            value: office.nextModule.name,
+            meta: `Unlocks at HQ Lv ${office.nextModule.unlockLevel}`,
+            art: office.nextModule.artIcon,
+          }
+        : {
+            label: 'Base growth',
+            value: 'Mythic cap',
+            meta: 'All office lanes online',
+            art: 'master-desk',
+          },
+  ]
+    .map(
+      (item) => `
+        <article class="builder-milestone-card">
+          <div class="builder-milestone-art">${renderUpgradeArt(item.art, 'chip')}</div>
+          <div class="builder-milestone-copy">
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+            <em>${item.meta}</em>
+          </div>
+        </article>
+      `,
+    )
+    .join('');
+
   dom.menuBuilderGrid.innerHTML = `
     <section class="builder-panel builder-panel--hero">
       <div class="builder-rank-card">
-        <div class="builder-rank-art">
-          ${renderUpgradeArt(office.currentExpansion.artIcon || 'master-desk', 'card')}
+        <div
+          class="builder-rank-art builder-rank-art--scene"
+          style="--scene-wall-top:${rpg.activeTheme.wallTop}; --scene-wall-mid:${rpg.activeTheme.wallMid}; --scene-wall-bottom:${rpg.activeTheme.wallBottom}; --scene-floor-a:${rpg.activeTheme.floorA}; --scene-floor-b:${rpg.activeTheme.floorB}; --scene-accent:rgb(${rpg.activeTheme.accent}); --scene-secondary:rgb(${rpg.activeTheme.secondary});"
+        >
+          ${renderScenePreview(rpg.activeTheme)}
+          <div class="builder-rank-badge">
+            ${renderUpgradeArt(office.currentExpansion.artIcon || 'master-desk', 'chip')}
+          </div>
         </div>
         <div class="builder-rank-copy">
           <span class="info-kicker">Studio rank</span>
@@ -2597,26 +2799,41 @@ function renderMenuHQ(rpg) {
           </div>
         </div>
       </div>
-      <div class="builder-progress-card">
-        <div class="builder-progress-head">
-          <div>
-            <span class="info-kicker">Builder XP</span>
-            <h4>${formatCount(office.builderXp)} XP</h4>
+      <div class="builder-command-stack">
+        <div class="builder-progress-card builder-progress-card--dual">
+          <div class="builder-track-headline">
+            <span class="info-kicker">Developer track</span>
+            <strong>Level ${devProgress.level}</strong>
           </div>
-          <div class="builder-progress-meta">
-            <strong>${Math.round(office.progress * 100)}%</strong>
-            <span>${nextTierLabel}</span>
+          <div class="builder-progress-bar">
+            <div class="builder-progress-fill" style="width:${Math.max(6, clampPercent(devProgress.progress))}%"></div>
+          </div>
+          <div class="builder-progress-foot">
+            <span>${formatCount(devProgress.totalCommits)} commits total</span>
+            <span>${formatCount(devProgress.commitsToNextLevel)} to next level</span>
+          </div>
+          <div class="builder-unlock-row">
+            ${(rpg.developer?.currentPerks || []).map((unlock) => `<span>${unlock}</span>`).join('')}
           </div>
         </div>
-        <div class="builder-progress-bar">
-          <div class="builder-progress-fill" style="width:${Math.max(6, Math.round(office.progress * 100))}%"></div>
+        <div class="builder-progress-card builder-progress-card--dual">
+          <div class="builder-track-headline">
+            <span class="info-kicker">Builder HQ</span>
+            <strong>${formatCount(office.builderXp)} XP</strong>
+          </div>
+          <div class="builder-progress-bar">
+            <div class="builder-progress-fill" style="width:${Math.max(6, clampPercent(office.progress))}%"></div>
+          </div>
+          <div class="builder-progress-foot">
+            <span>${formatCount(office.xpIntoLevel)} / ${formatCount(office.xpForLevel)} inside this tier</span>
+            <span>${office.nextTier ? `${formatCount(office.xpToNext)} to ${nextTierLabel}` : 'Top office tier unlocked'}</span>
+          </div>
+          <div class="builder-unlock-row">
+            ${office.currentTier.unlocks.map((unlock) => `<span>${unlock}</span>`).join('')}
+          </div>
         </div>
-        <div class="builder-progress-foot">
-          <span>${formatCount(office.xpIntoLevel)} / ${formatCount(office.xpForLevel)} XP inside this tier</span>
-          <span>${office.nextTier ? `${formatCount(office.xpToNext)} XP to next tier` : 'Top office tier unlocked'}</span>
-        </div>
-        <div class="builder-unlock-row">
-          ${office.currentTier.unlocks.map((unlock) => `<span>${unlock}</span>`).join('')}
+        <div class="builder-milestone-grid">
+          ${milestoneCards}
         </div>
       </div>
     </section>
@@ -2625,9 +2842,9 @@ function renderMenuHQ(rpg) {
       <div class="builder-section-head">
         <div>
           <div class="info-kicker">Office systems</div>
-          <h4>Builder bonuses</h4>
+          <h4>Live bonuses</h4>
         </div>
-        <span class="menu-panel-copy">This is the part inspired by room progression loops: the office itself becomes the metagame.</span>
+        <span class="menu-panel-copy">Passive boosts now coming from titles, modules, and room buildout.</span>
       </div>
       <div class="builder-bonus-grid">
         ${bonusItems}
@@ -2640,7 +2857,7 @@ function renderMenuHQ(rpg) {
           <div class="info-kicker">Service room</div>
           <h4>Support modules</h4>
         </div>
-        <span class="menu-panel-copy">Persistent systems that make the room stronger, cheaper, and more elite over time.</span>
+        <span class="menu-panel-copy">Upgrade pips show how far each system has been developed.</span>
       </div>
       <div class="builder-module-grid">
         ${moduleMarkup}
@@ -2653,7 +2870,7 @@ function renderMenuHQ(rpg) {
           <div class="info-kicker">Base growth</div>
           <h4>Room expansions</h4>
         </div>
-        <span class="menu-panel-copy">Each milestone opens a new office lane and changes how the endgame room feels.</span>
+        <span class="menu-panel-copy">Each wing changes the office fantasy and unlock routing.</span>
       </div>
       <div class="builder-expansion-grid">
         ${expansionMarkup}
@@ -2718,6 +2935,7 @@ function renderDashboard() {
 
   const activeWorkspace = snapshot.requestedWorkspace || snapshot.session?.cwd || '';
   if (!state.player || state.lastPlayerWorkspace !== activeWorkspace) {
+    renderProgressRail();
     loadPlayerProfile();
   } else {
     renderPlayerProfile();

@@ -62,27 +62,44 @@
             <p class="info-copy" id="summary">
               Watching your Codex workspace in real time.
             </p>
+            <div class="activity-meta">
+              <span class="activity-pill" id="toolLabel">Idle</span>
+              <span class="activity-pill" id="debugLabel">No recent errors</span>
+              <span class="activity-pill" id="gitLabel">Workspace linked</span>
+              <span class="activity-pill" id="feedLabel">Waiting for activity</span>
+            </div>
           </article>
 
-          <article class="info-panel info-panel--metrics">
-            <div class="info-grid">
-              <div class="info-item">
-                <span>Tool</span>
-                <strong id="toolLabel">Idle</strong>
+          <article class="info-panel info-panel--progress">
+            <div class="track-stack">
+              <div class="track-card track-card--dev">
+                <div class="track-head">
+                  <span class="info-kicker">Dev XP</span>
+                  <strong id="devTrackLevel">Level 1</strong>
+                </div>
+                <div class="track-bar">
+                  <div class="track-bar-fill" id="devTrackFill"></div>
+                </div>
+                <div class="track-meta">
+                  <span id="devTrackCurrent">0 commits</span>
+                  <span id="devTrackNext">0 to next</span>
+                </div>
               </div>
-              <div class="info-item">
-                <span>Debug</span>
-                <strong id="debugLabel">No recent errors</strong>
-              </div>
-              <div class="info-item">
-                <span>Git</span>
-                <strong id="gitLabel">Workspace linked</strong>
-              </div>
-              <div class="info-item">
-                <span>Feed</span>
-                <strong id="feedLabel">Waiting for activity</strong>
+              <div class="track-card track-card--office">
+                <div class="track-head">
+                  <span class="info-kicker">HQ XP</span>
+                  <strong id="officeTrackLevel">Workbench Den</strong>
+                </div>
+                <div class="track-bar">
+                  <div class="track-bar-fill" id="officeTrackFill"></div>
+                </div>
+                <div class="track-meta">
+                  <span id="officeTrackCurrent">0 studio XP</span>
+                  <span id="officeTrackNext">0 to next</span>
+                </div>
               </div>
             </div>
+            <div class="track-next" id="nextUnlockLabel">Next unlock: Starter Loft</div>
           </article>
 
           <button class="player-glance" id="playerGlance" type="button">
@@ -91,10 +108,14 @@
               <span class="info-kicker">Player</span>
               <strong id="playerNameMini">Loading GitHub profile...</strong>
               <span id="playerLevelMini">Level 1</span>
+              <div class="player-glance-progress">
+                <div class="player-glance-progress-fill" id="playerGlanceFill"></div>
+              </div>
             </div>
             <div class="player-glance-meta">
               <span class="player-glance-commits" id="playerCommitMini">0 commits</span>
               <span class="player-glance-coins" id="playerCoinMini">0 coins</span>
+              <span class="player-glance-next" id="playerGlanceNext">0 to next</span>
             </div>
           </button>
         </section>
@@ -182,7 +203,7 @@
           <div>
             <div class="info-kicker">Game systems</div>
             <h2>Studio Menu</h2>
-            <p>Run the office like a dev RPG base: grow the HQ, buy upgrades, and unlock better rooms.</p>
+            <p>Build the office, grow the HQ, unlock the endgame setup.</p>
           </div>
           <button class="game-menu-close" id="menuClose" type="button">Close</button>
         </header>
@@ -194,9 +215,20 @@
             <span class="wallet-copy" id="menuHeroCopy">Link GitHub progress to unlock the full shop.</span>
           </div>
           <div class="menu-hero-card">
-            <span class="wallet-label" id="menuOwnedLabel">Owned upgrades</span>
-            <strong id="menuOwnedCount">0 items</strong>
-            <span class="wallet-copy" id="menuOwnedCopy">Starter office loadout.</span>
+            <span class="wallet-label" id="menuDevLabel">Dev track</span>
+            <strong id="menuDevCount">Level 1</strong>
+            <span class="wallet-copy" id="menuDevCopy">0 commits to next level.</span>
+            <div class="menu-hero-progress">
+              <div class="menu-hero-progress-fill" id="menuDevFill"></div>
+            </div>
+          </div>
+          <div class="menu-hero-card">
+            <span class="wallet-label" id="menuOwnedLabel">Builder HQ</span>
+            <strong id="menuOwnedCount">Workbench Den</strong>
+            <span class="wallet-copy" id="menuOwnedCopy">0 XP to next office tier.</span>
+            <div class="menu-hero-progress">
+              <div class="menu-hero-progress-fill" id="menuOwnedFill"></div>
+            </div>
           </div>
           <div class="menu-hero-card">
             <span class="wallet-label" id="menuThemeLabel">Active scene</span>
@@ -218,7 +250,7 @@
               <div class="info-kicker">Studio progression</div>
               <h3>Builder HQ</h3>
             </div>
-            <span class="menu-panel-copy">Grow the office like a real dev base: XP, power, service modules, and room expansions.</span>
+            <span class="menu-panel-copy">Progress, power, milestones.</span>
           </div>
           <div class="builder-grid" id="menuBuilderGrid"></div>
         </section>
@@ -229,7 +261,7 @@
               <div class="info-kicker">Upgrade catalog</div>
               <h3>Office Shop</h3>
             </div>
-            <span class="menu-panel-copy">Buy upgrades that visibly change the room.</span>
+            <span class="menu-panel-copy">Gear that changes the room.</span>
           </div>
           <div class="menu-shop-toolbar">
             <article class="menu-shop-spotlight" id="menuShopSpotlight"></article>
@@ -244,7 +276,7 @@
               <div class="info-kicker">Environment presets</div>
               <h3>Scene Library</h3>
             </div>
-            <span class="menu-panel-copy">Preview unlocked and upcoming room themes.</span>
+            <span class="menu-panel-copy">Unlocked and upcoming themes.</span>
           </div>
           <div class="menu-card-grid menu-card-grid--scenes" id="menuSceneGrid"></div>
         </section>
@@ -255,7 +287,7 @@
               <div class="info-kicker">What you own</div>
               <h3>Studio Inventory</h3>
             </div>
-            <span class="menu-panel-copy">Track equipped systems, owned upgrades, and current title.</span>
+            <span class="menu-panel-copy">Loadout, titles, owned gear.</span>
           </div>
           <div class="menu-inventory-grid" id="menuInventoryGrid"></div>
         </section>
