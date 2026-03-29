@@ -760,6 +760,125 @@ body::after {
   font-size: 1rem;
 }
 
+.menu-shop-toolbar {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.menu-shop-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.95fr);
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 203, 121, 0.12), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-shop-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: rgba(255, 203, 121, 0.68);
+}
+
+.menu-shop-spotlight.is-computer {
+  background:
+    radial-gradient(circle at 72% 28%, rgba(147, 240, 255, 0.18), transparent 24%),
+    radial-gradient(circle at 18% 22%, rgba(255, 203, 121, 0.13), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+  border-color: rgba(147, 240, 255, 0.18);
+}
+
+.menu-shop-spotlight-copy {
+  display: grid;
+  gap: 8px;
+}
+
+.menu-shop-spotlight-copy h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  line-height: 0.98;
+}
+
+.menu-shop-spotlight-copy p,
+.shop-filter span,
+.shop-metric span,
+.menu-card-meta span {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-shop-spotlight-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.shop-metric {
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 6px;
+}
+
+.shop-metric strong {
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.menu-shop-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.shop-filter {
+  min-width: 148px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: grid;
+  gap: 4px;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.shop-filter strong {
+  font-size: 0.78rem;
+}
+
+.shop-filter:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 121, 0.24);
+}
+
+.shop-filter.is-active {
+  border-color: rgba(147, 240, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(147, 240, 255, 0.12), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.03);
+}
+
 .menu-card-grid,
 .menu-inventory-grid {
   display: grid;
@@ -768,6 +887,10 @@ body::after {
 
 .menu-card-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.menu-card-grid--computer {
+  grid-template-columns: 1fr;
 }
 
 .menu-card {
@@ -800,6 +923,26 @@ body::after {
   opacity: 0.7;
 }
 
+.menu-card--computer {
+  background:
+    radial-gradient(circle at 82% 18%, rgba(147, 240, 255, 0.14), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+}
+
+.menu-card--computer::after {
+  content: '';
+  position: absolute;
+  inset: auto 14px 14px auto;
+  width: 56px;
+  height: 56px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 44%),
+    radial-gradient(circle at center, color-mix(in srgb, var(--rarity-accent, #93f0ff) 26%, transparent), transparent 72%);
+  opacity: 0.88;
+  pointer-events: none;
+}
+
 .menu-card-copy {
   display: grid;
   gap: 10px;
@@ -813,6 +956,18 @@ body::after {
 
 .menu-card-head strong {
   font-size: 0.96rem;
+}
+
+.menu-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.menu-card-meta span {
+  padding: 4px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .menu-card-tag,
@@ -893,6 +1048,15 @@ body::after {
 
 .menu-thumb {
   background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 8px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    linear-gradient(180deg, rgba(10, 16, 28, 0.8), rgba(6, 10, 18, 0.98));
+}
+
+.menu-card--computer .menu-thumb {
+  background:
+    radial-gradient(circle at 78% 30%, rgba(147, 240, 255, 0.18), transparent 22%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
     repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 8px),
     linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
@@ -1095,6 +1259,356 @@ body::after {
   top: 26px;
 }
 
+.menu-thumb[data-icon='dual-rig']::before {
+  left: 28px;
+  top: 50px;
+  width: 62px;
+  height: 5px;
+  background: color-mix(in srgb, var(--card-accent) 60%, white 10%);
+}
+
+.menu-thumb[data-icon='dual-rig']::after {
+  width: 24px;
+  height: 20px;
+  left: 24px;
+  top: 24px;
+  box-shadow: 38px 0 0 color-mix(in srgb, var(--card-accent) 16%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='smart-lights']::before {
+  left: 16px;
+  right: 16px;
+  top: 16px;
+  height: 5px;
+  background: color-mix(in srgb, var(--card-accent) 72%, white 10%);
+  box-shadow:
+    0 44px 0 rgba(255, 255, 255, 0.08),
+    0 50px 0 rgba(255, 255, 255, 0.06);
+}
+
+.menu-thumb[data-icon='smart-lights']::after {
+  width: 82px;
+  height: 10px;
+  left: 18px;
+  top: 34px;
+  border: none;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card-accent) 32%, white 8%), transparent);
+  box-shadow: none;
+}
+
+.menu-thumb[data-icon='router-node']::after {
+  width: 18px;
+  height: 58px;
+  left: 55px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='router-node']::before {
+  left: 50px;
+  top: 60px;
+  width: 28px;
+  height: 3px;
+  background: color-mix(in srgb, var(--card-accent) 66%, white 8%);
+}
+
+.menu-thumb[data-icon='poster-pack']::after {
+  width: 28px;
+  height: 40px;
+  left: 26px;
+  top: 22px;
+  box-shadow: 34px 10px 0 color-mix(in srgb, var(--card-accent) 10%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='espresso-bar']::after {
+  width: 28px;
+  height: 24px;
+  left: 38px;
+  top: 40px;
+}
+
+.menu-thumb[data-icon='espresso-bar']::before {
+  left: 68px;
+  top: 44px;
+  width: 10px;
+  height: 12px;
+  border: 2px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  border-left: none;
+  background: transparent;
+}
+
+.menu-thumb[data-icon='window-garden']::after,
+.menu-thumb[data-icon='plant-lab']::after {
+  width: 18px;
+  height: 58px;
+  left: 52px;
+  top: 18px;
+  border-radius: 40px;
+}
+
+.menu-thumb[data-icon='window-garden']::before,
+.menu-thumb[data-icon='plant-lab']::before {
+  left: 48px;
+  top: 62px;
+  width: 28px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-thumb[data-icon='cable-raceway']::after {
+  width: 74px;
+  height: 40px;
+  left: 24px;
+  top: 38px;
+  border-left: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  border-bottom: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  background: transparent;
+}
+
+.menu-thumb[data-icon='cable-raceway']::before {
+  left: 32px;
+  top: 28px;
+  width: 60px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-thumb[data-icon='mech-board']::after {
+  width: 74px;
+  height: 14px;
+  left: 24px;
+  top: 54px;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--card-accent) 72%, white 8%);
+}
+
+.menu-thumb[data-icon='mech-board']::before {
+  left: 24px;
+  top: 36px;
+  width: 74px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card-accent) 22%, white 6%), transparent);
+}
+
+.menu-thumb[data-icon='scout-prime']::after,
+.menu-thumb[data-icon='trace-plus']::after {
+  width: 28px;
+  height: 28px;
+  left: 48px;
+  top: 30px;
+  border-radius: 999px;
+}
+
+.menu-thumb[data-icon='scout-prime']::before,
+.menu-thumb[data-icon='trace-plus']::before {
+  left: 36px;
+  top: 66px;
+  width: 54px;
+  height: 3px;
+  background: color-mix(in srgb, var(--card-accent) 62%, white 8%);
+}
+
+.menu-thumb[data-icon='focus-pulse']::after {
+  width: 82px;
+  height: 18px;
+  left: 18px;
+  top: 42px;
+}
+
+.menu-thumb[data-icon='server-rack']::after,
+.menu-thumb[data-icon='patch-bay']::after,
+.menu-thumb[data-icon='mini-fridge']::after,
+.menu-thumb[data-icon='night-vending']::after {
+  width: 40px;
+  height: 70px;
+  left: 38px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='server-rack']::before,
+.menu-thumb[data-icon='patch-bay']::before,
+.menu-thumb[data-icon='mini-fridge']::before,
+.menu-thumb[data-icon='night-vending']::before {
+  left: 44px;
+  top: 26px;
+  width: 28px;
+  height: 4px;
+  background: color-mix(in srgb, var(--card-accent) 68%, white 8%);
+  box-shadow:
+    0 12px 0 color-mix(in srgb, var(--card-accent) 46%, white 8%),
+    0 24px 0 color-mix(in srgb, var(--card-accent) 52%, white 8%),
+    0 36px 0 color-mix(in srgb, var(--card-accent) 38%, white 8%);
+}
+
+.menu-thumb[data-icon='ultrawide']::after {
+  width: 92px;
+  height: 26px;
+  left: 14px;
+  top: 22px;
+  border-radius: 12px 12px 8px 8px;
+}
+
+.menu-thumb[data-icon='ultrawide']::before {
+  left: 46px;
+  top: 52px;
+  width: 28px;
+  height: 16px;
+  background: color-mix(in srgb, var(--card-accent) 56%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='liquid-loop']::after {
+  width: 16px;
+  height: 54px;
+  left: 80px;
+  top: 22px;
+}
+
+.menu-thumb[data-icon='liquid-loop']::before {
+  left: 24px;
+  top: 28px;
+  width: 48px;
+  height: 36px;
+  border-top: 3px solid color-mix(in srgb, var(--card-accent) 70%, white 8%);
+  border-right: 3px solid color-mix(in srgb, var(--card-accent) 70%, white 8%);
+  border-bottom: 3px solid color-mix(in srgb, var(--card-accent) 42%, white 8%);
+  background: transparent;
+}
+
+.menu-thumb[data-icon='helper-drone']::after {
+  width: 28px;
+  height: 28px;
+  left: 48px;
+  top: 32px;
+  border-radius: 999px;
+}
+
+.menu-thumb[data-icon='helper-drone']::before {
+  left: 32px;
+  right: 32px;
+  top: 52px;
+  height: 2px;
+  background: color-mix(in srgb, var(--card-accent) 72%, white 8%);
+}
+
+.menu-thumb[data-icon='holo-board']::after,
+.menu-thumb[data-icon='wall-terminal']::after {
+  width: 82px;
+  height: 38px;
+  left: 18px;
+  top: 30px;
+}
+
+.menu-thumb[data-icon='speaker-stack']::after {
+  width: 18px;
+  height: 54px;
+  left: 28px;
+  top: 26px;
+  box-shadow: 42px 0 0 color-mix(in srgb, var(--card-accent) 18%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='legendary-rig']::after {
+  width: 88px;
+  height: 42px;
+  left: 18px;
+  top: 18px;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--card-accent) 72%, white 8%),
+    0 0 18px color-mix(in srgb, var(--card-accent) 18%, transparent);
+}
+
+.menu-thumb[data-icon='legendary-rig']::before {
+  left: 22px;
+  top: 64px;
+  width: 80px;
+  height: 6px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card-accent) 58%, white 8%), transparent);
+}
+
+.menu-thumb[data-icon='monitor-wall']::after {
+  width: 22px;
+  height: 18px;
+  left: 18px;
+  top: 22px;
+  box-shadow:
+    28px 0 0 color-mix(in srgb, var(--card-accent) 14%, rgba(8, 12, 22, 0.92)),
+    56px 0 0 color-mix(in srgb, var(--card-accent) 14%, rgba(8, 12, 22, 0.92)),
+    14px 24px 0 color-mix(in srgb, var(--card-accent) 14%, rgba(8, 12, 22, 0.92)),
+    42px 24px 0 color-mix(in srgb, var(--card-accent) 14%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='monitor-wall']::before {
+  left: 18px;
+  top: 74px;
+  width: 84px;
+  height: 4px;
+  background: color-mix(in srgb, var(--card-accent) 46%, white 8%);
+}
+
+.menu-thumb[data-icon='neon-signage']::after {
+  width: 80px;
+  height: 24px;
+  left: 18px;
+  top: 40px;
+  background: transparent;
+  border: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--card-accent) 50%, transparent);
+}
+
+.menu-thumb[data-icon='arcade-corner']::after {
+  width: 52px;
+  height: 70px;
+  left: 34px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='trophy-shelf']::after {
+  width: 22px;
+  height: 28px;
+  left: 50px;
+  top: 26px;
+}
+
+.menu-thumb[data-icon='quantum-core']::after {
+  width: 38px;
+  height: 38px;
+  left: 44px;
+  top: 28px;
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 6px rgba(255, 255, 255, 0.05),
+    0 0 18px color-mix(in srgb, var(--card-accent) 34%, transparent);
+}
+
+.menu-thumb[data-icon='quantum-core']::before {
+  left: 28px;
+  top: 24px;
+  width: 70px;
+  height: 46px;
+  background: transparent;
+  border: 2px solid color-mix(in srgb, var(--card-accent) 44%, white 8%);
+  border-radius: 18px;
+}
+
+.menu-thumb[data-icon='master-desk']::after {
+  width: 94px;
+  height: 30px;
+  left: 14px;
+  top: 20px;
+  border-radius: 10px;
+  box-shadow:
+    inset 0 0 0 2px color-mix(in srgb, var(--card-accent) 72%, white 8%),
+    0 16px 0 -8px color-mix(in srgb, var(--card-accent) 32%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='master-desk']::before {
+  left: 16px;
+  top: 58px;
+  width: 92px;
+  height: 10px;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--card-accent) 62%, white 8%), transparent);
+  box-shadow:
+    0 -28px 0 -4px rgba(255, 255, 255, 0.06),
+    0 14px 0 rgba(255, 255, 255, 0.06);
+}
+
 .scene-thumb {
   background:
     linear-gradient(180deg, var(--scene-wall-top), var(--scene-wall-mid) 54%, var(--scene-wall-bottom)),
@@ -1195,6 +1709,28 @@ body::after {
 .inventory-chip-icon::before {
   inset: 5px;
   background: color-mix(in srgb, var(--chip-accent) 72%, white 8%);
+}
+
+.inventory-chip-icon[data-icon='dual-rig']::before,
+.inventory-chip-icon[data-icon='ultrawide']::before,
+.inventory-chip-icon[data-icon='legendary-rig']::before,
+.inventory-chip-icon[data-icon='monitor-wall']::before,
+.inventory-chip-icon[data-icon='master-desk']::before {
+  inset: 4px 3px 9px;
+  box-shadow: 8px 0 0 color-mix(in srgb, var(--chip-accent) 58%, white 8%);
+}
+
+.inventory-chip-icon[data-icon='liquid-loop']::before,
+.inventory-chip-icon[data-icon='quantum-core']::before {
+  inset: 4px;
+  border-radius: 999px;
+}
+
+.inventory-chip-icon[data-icon='helper-drone']::before,
+.inventory-chip-icon[data-icon='scout-prime']::before,
+.inventory-chip-icon[data-icon='trace-plus']::before {
+  inset: 4px;
+  border-radius: 999px;
 }
 
 .profile-modal[hidden] {
@@ -1608,6 +2144,10 @@ body::after {
     bottom: 14px;
     width: min(460px, calc(100vw - 28px));
   }
+
+  .menu-shop-spotlight {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -1667,6 +2207,7 @@ body::after {
   }
 
   .game-menu-topline,
+  .menu-shop-spotlight-metrics,
   .menu-card-grid,
   .menu-inventory-grid,
   .wallet-strip,

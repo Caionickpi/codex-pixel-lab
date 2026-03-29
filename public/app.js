@@ -116,6 +116,8 @@ const dom = {
   menuOwnedCopy: document.getElementById('menuOwnedCopy'),
   menuThemeName: document.getElementById('menuThemeName'),
   menuThemeMood: document.getElementById('menuThemeMood'),
+  menuShopSpotlight: document.getElementById('menuShopSpotlight'),
+  menuShopFilters: document.getElementById('menuShopFilters'),
   menuShopGrid: document.getElementById('menuShopGrid'),
   menuSceneGrid: document.getElementById('menuSceneGrid'),
   menuInventoryGrid: document.getElementById('menuInventoryGrid'),
@@ -159,11 +161,19 @@ const state = {
   playerLoading: false,
   lastPlayerWorkspace: '',
   menuTab: 'shop',
+  shopFilter: 'all',
   inputDirty: false,
   lastFrameAt: performance.now(),
 };
 
 const MENU_TABS = ['shop', 'scenes', 'inventory'];
+const SHOP_FILTERS = [
+  { id: 'all', label: 'All systems', copy: 'Everything available for the studio.' },
+  { id: 'computer', label: 'Computer Lab', copy: 'Rigs, displays, cooling, and endgame desk tech.' },
+  { id: 'systems', label: 'Studio Systems', copy: 'Ops, telemetry, sync, and reactive control surfaces.' },
+  { id: 'atmosphere', label: 'Atmosphere', copy: 'Lighting, lounge, decor, and room identity.' },
+  { id: 'agents', label: 'Agents', copy: 'Specialist upgrades for Scout, Trace, and support bots.' },
+];
 
 function safeJsonParse(input, fallback = null) {
   try {
@@ -676,8 +686,16 @@ function drawFurniture(scale, timeSeconds) {
     { image: pcFrame, col: 14, row: 5 },
   ];
 
-  if (hasUpgrade('dual-rig') || hasUpgrade('legendary-rig')) {
+  if (hasUpgrade('dual-rig') || hasUpgrade('ultrawide-array') || hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
     dynamicItems.push({ image: pcFrame, col: 9, row: 6 });
+  }
+
+  if (hasUpgrade('ultrawide-array') || hasUpgrade('quantum-core') || hasUpgrade('master-control-desk')) {
+    dynamicItems.push({ image: pcFrame, col: 7, row: 6 });
+  }
+
+  if (hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
+    dynamicItems.push({ image: pcFrame, col: 3, row: 5 }, { image: pcFrame, col: 15, row: 5 });
   }
 
   if (hasUpgrade('window-garden')) {
@@ -716,9 +734,20 @@ function drawFurniture(scale, timeSeconds) {
   }
 
   const glowAlpha = 0.12 + Math.sin(timeSeconds * 3.6) * 0.04;
+  ctx.fillStyle = `rgba(${palette.secondary}, ${glowAlpha * 0.9})`;
+  ctx.fillRect(scale.offsetX + 2.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
   ctx.fillStyle = `rgba(${palette.secondary}, ${glowAlpha})`;
   ctx.fillRect(scale.offsetX + 8.35 * TILE_SIZE * scale.zoom, scale.offsetY + 6.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
   ctx.fillRect(scale.offsetX + 14.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
+
+  if (hasUpgrade('dual-rig') || hasUpgrade('ultrawide-array') || hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
+    ctx.fillRect(scale.offsetX + 9.35 * TILE_SIZE * scale.zoom, scale.offsetY + 6.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
+  }
+
+  if (hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
+    ctx.fillRect(scale.offsetX + 3.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
+    ctx.fillRect(scale.offsetX + 15.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
+  }
 
   ctx.fillStyle = `rgba(${palette.accent}, 0.18)`;
   ctx.fillRect(scale.offsetX + 4.35 * TILE_SIZE * scale.zoom, scale.offsetY + 8.2 * TILE_SIZE * scale.zoom - Math.sin(timeSeconds * 2.4) * 2, 2, 12);
@@ -728,6 +757,130 @@ function drawFurniture(scale, timeSeconds) {
 }
 
 function drawOfficeUpgrades(scale, timeSeconds, palette) {
+  const unit = TILE_SIZE * scale.zoom;
+  const offsetX = scale.offsetX;
+  const offsetY = scale.offsetY;
+  const hasAdvancedRig =
+    hasUpgrade('ultrawide-array') ||
+    hasUpgrade('legendary-rig') ||
+    hasUpgrade('quantum-core') ||
+    hasUpgrade('master-control-desk');
+
+  if (hasUpgrade('master-control-desk')) {
+    const railAlpha = 0.16 + Math.sin(timeSeconds * 2.2) * 0.05;
+    ctx.fillStyle = `rgba(${palette.secondary}, ${railAlpha})`;
+    ctx.fillRect(offsetX + 6.6 * unit, offsetY + 10.1 * unit, 5.2 * unit, 0.14 * unit);
+    ctx.fillRect(offsetX + 6.6 * unit, offsetY + 4.85 * unit, 0.14 * unit, 5.25 * unit);
+    ctx.fillRect(offsetX + 11.66 * unit, offsetY + 4.85 * unit, 0.14 * unit, 5.25 * unit);
+    ctx.fillStyle = `rgba(${palette.accent}, ${railAlpha * 0.9})`;
+    ctx.fillRect(offsetX + 6.95 * unit, offsetY + 10.45 * unit, 4.5 * unit, 0.12 * unit);
+
+    const beam = ctx.createLinearGradient(offsetX + 7.1 * unit, 0, offsetX + 11.3 * unit, 0);
+    beam.addColorStop(0, 'rgba(0,0,0,0)');
+    beam.addColorStop(0.5, `rgba(${palette.secondary}, 0.35)`);
+    beam.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = beam;
+    ctx.fillRect(offsetX + 7.1 * unit, offsetY + 3.2 * unit, 4.2 * unit, 0.22 * unit);
+
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
+    ctx.fillRect(offsetX + 6.88 * unit, offsetY + 6.18 * unit, 0.46 * unit, 1.58 * unit);
+    ctx.fillRect(offsetX + 10.98 * unit, offsetY + 6.18 * unit, 0.46 * unit, 1.58 * unit);
+    ctx.strokeStyle = `rgba(${palette.secondary}, 0.34)`;
+    ctx.strokeRect(offsetX + 6.88 * unit, offsetY + 6.18 * unit, 0.46 * unit, 1.58 * unit);
+    ctx.strokeRect(offsetX + 10.98 * unit, offsetY + 6.18 * unit, 0.46 * unit, 1.58 * unit);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.54)`;
+    ctx.fillRect(offsetX + 7.0 * unit, offsetY + 6.45 * unit, 0.22 * unit, 0.88 * unit);
+    ctx.fillRect(offsetX + 11.1 * unit, offsetY + 6.45 * unit, 0.22 * unit, 0.88 * unit);
+    ctx.fillStyle = `rgba(${palette.accent}, ${railAlpha * 1.2})`;
+    ctx.fillRect(offsetX + 7.15 * unit, offsetY + 4.2 * unit, 4.05 * unit, 0.16 * unit);
+  }
+
+  if (hasUpgrade('monitor-wall') || hasUpgrade('master-control-desk')) {
+    const wallPanels = hasUpgrade('master-control-desk') ? 4 : 3;
+    const panelWidth = hasUpgrade('master-control-desk') ? 1.4 * unit : 1.58 * unit;
+    for (let i = 0; i < wallPanels; i += 1) {
+      const panelX = offsetX + (6.45 + i * 1.56) * unit;
+      const panelY = offsetY + (2.1 + (i % 2) * 0.04) * unit;
+      ctx.fillStyle = 'rgba(9, 14, 24, 0.94)';
+      ctx.fillRect(panelX, panelY, panelWidth, 0.92 * unit);
+      ctx.strokeStyle = `rgba(${palette.secondary}, 0.34)`;
+      ctx.strokeRect(panelX, panelY, panelWidth, 0.92 * unit);
+      ctx.fillStyle = `rgba(${palette.secondary}, 0.16)`;
+      ctx.fillRect(panelX + 3, panelY + 3, panelWidth - 6, 0.92 * unit - 6);
+      ctx.fillStyle = `rgba(${palette.secondary}, 0.68)`;
+      ctx.fillRect(panelX + 6, panelY + 8, panelWidth - 12, 2);
+      for (let bar = 0; bar < 4; bar += 1) {
+        ctx.fillRect(panelX + 6 + bar * 10, panelY + 15 + ((bar + i) % 2) * 2, 4, 6 + ((bar + i) % 3) * 3);
+      }
+    }
+  }
+
+  if (hasAdvancedRig) {
+    const screenX = offsetX + 7.4 * unit;
+    const screenY = offsetY + 5.55 * unit;
+    const screenW = 3.05 * unit;
+    const screenH = 0.98 * unit;
+    ctx.fillStyle = 'rgba(8, 12, 20, 0.96)';
+    ctx.fillRect(screenX, screenY, screenW, screenH);
+    ctx.strokeStyle = `rgba(${palette.secondary}, 0.34)`;
+    ctx.strokeRect(screenX, screenY, screenW, screenH);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.18)`;
+    ctx.fillRect(screenX + 4, screenY + 4, screenW - 8, screenH - 8);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.7)`;
+    ctx.fillRect(screenX + 8, screenY + 8, screenW - 16, 2);
+    ctx.fillRect(screenX + 8, screenY + 14, screenW * 0.4, 4);
+    ctx.fillRect(screenX + 8 + screenW * 0.46, screenY + 14, screenW * 0.26, 10);
+    ctx.fillRect(screenX + 8, screenY + screenH - 8, screenW - 16, 2);
+  }
+
+  if (hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
+    ctx.fillStyle = `rgba(${palette.accent}, 0.2)`;
+    ctx.fillRect(offsetX + 7.2 * unit, offsetY + 7.74 * unit, 3.5 * unit, 0.15 * unit);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.14)`;
+    ctx.fillRect(offsetX + 7.15 * unit, offsetY + 6.36 * unit, 0.16 * unit, 1.38 * unit);
+    ctx.fillRect(offsetX + 10.55 * unit, offsetY + 6.36 * unit, 0.16 * unit, 1.38 * unit);
+  }
+
+  if (hasUpgrade('liquid-cooling-loop') || hasUpgrade('quantum-core') || hasUpgrade('master-control-desk')) {
+    const towerX = offsetX + 11.45 * unit;
+    const towerY = offsetY + 6.05 * unit;
+    const towerW = 0.72 * unit;
+    const towerH = 1.5 * unit;
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.96)';
+    ctx.fillRect(towerX, towerY, towerW, towerH);
+    ctx.strokeStyle = `rgba(${palette.secondary}, 0.35)`;
+    ctx.strokeRect(towerX, towerY, towerW, towerH);
+    const coolantAlpha = 0.5 + Math.sin(timeSeconds * 3.4) * 0.16;
+    ctx.fillStyle = `rgba(${palette.secondary}, ${coolantAlpha})`;
+    ctx.fillRect(towerX + 3, towerY + 5, towerW - 6, towerH - 10);
+    ctx.strokeStyle = `rgba(${palette.secondary}, 0.45)`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(towerX + 4, towerY + 8);
+    ctx.lineTo(offsetX + 10.45 * unit, offsetY + 6.75 * unit);
+    ctx.lineTo(offsetX + 9.6 * unit, offsetY + 6.95 * unit);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(towerX + towerW - 4, towerY + 16);
+    ctx.lineTo(offsetX + 10.55 * unit, offsetY + 7.35 * unit);
+    ctx.lineTo(offsetX + 9.8 * unit, offsetY + 7.45 * unit);
+    ctx.stroke();
+  }
+
+  if (hasUpgrade('quantum-core') || hasUpgrade('master-control-desk')) {
+    const coreX = offsetX + 12.55 * unit;
+    const coreY = offsetY + 7.45 * unit;
+    const pulse = 0.24 + Math.sin(timeSeconds * 2.8) * 0.06;
+    ctx.fillStyle = 'rgba(9, 13, 22, 0.94)';
+    ctx.fillRect(coreX - 0.35 * unit, coreY - 0.35 * unit, 0.7 * unit, 0.7 * unit);
+    ctx.strokeStyle = `rgba(${palette.accent}, 0.42)`;
+    ctx.strokeRect(coreX - 0.35 * unit, coreY - 0.35 * unit, 0.7 * unit, 0.7 * unit);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.52 + pulse})`;
+    ctx.fillRect(coreX - 0.16 * unit, coreY - 0.16 * unit, 0.32 * unit, 0.32 * unit);
+    ctx.strokeStyle = `rgba(${palette.secondary}, ${0.26 + pulse})`;
+    ctx.strokeRect(coreX - 0.5 * unit, coreY - 0.5 * unit, unit, unit);
+  }
+
   if (hasUpgrade('smart-lights')) {
     ctx.fillStyle = `rgba(${palette.accent}, 0.1)`;
     ctx.fillRect(scale.offsetX + 0.9 * TILE_SIZE * scale.zoom, scale.offsetY + 0.7 * TILE_SIZE * scale.zoom, 8.2 * TILE_SIZE * scale.zoom, 0.28 * TILE_SIZE * scale.zoom);
@@ -1361,7 +1514,7 @@ function renderUpgradeShop(rpg) {
       (upgrade) => `
         <article class="upgrade-card ${upgrade.owned ? 'is-owned' : ''} ${upgrade.unlocked ? '' : 'is-locked'}">
           <div class="upgrade-card-head">
-            <span>${upgrade.type}</span>
+            <span>${menuCategoryLabel(upgrade.category)} | ${menuRarityLabel(upgrade.rarity)}</span>
             <strong>${upgrade.name}</strong>
           </div>
           <p>${upgrade.description}</p>
@@ -1418,6 +1571,50 @@ function menuAccent(type) {
   return accents[type] || '#ffcb79';
 }
 
+function menuCategoryLabel(category) {
+  const labels = {
+    computer: 'Computer lab',
+    systems: 'Studio systems',
+    atmosphere: 'Atmosphere',
+    agents: 'Agents',
+  };
+  return labels[category] || 'Upgrade';
+}
+
+function menuRarityLabel(rarity) {
+  const labels = {
+    common: 'Standard',
+    rare: 'Advanced',
+    epic: 'Elite',
+    legendary: 'Legendary',
+    mythic: 'Master',
+  };
+  return labels[rarity] || 'Standard';
+}
+
+function menuRarityTone(rarity) {
+  const tones = {
+    common: '#8ff3cf',
+    rare: '#88b7ff',
+    epic: '#ffcb79',
+    legendary: '#ff8fcf',
+    mythic: '#93f0ff',
+  };
+  return tones[rarity] || '#8ff3cf';
+}
+
+function filteredUpgradeCatalog(rpg) {
+  if (!rpg) return [];
+  if (state.shopFilter === 'all') return rpg.upgradeCatalog;
+  return rpg.upgradeCatalog.filter((upgrade) => upgrade.category === state.shopFilter);
+}
+
+function setShopFilter(filterId) {
+  if (!SHOP_FILTERS.some((filter) => filter.id === filterId)) return;
+  state.shopFilter = filterId;
+  renderGameMenu();
+}
+
 function menuShopButtonLabel(upgrade) {
   if (upgrade.owned) return 'Owned';
   if (!upgrade.unlocked) return `Level ${upgrade.unlockLevel}`;
@@ -1429,6 +1626,83 @@ function menuThemeButtonLabel(theme, rpg) {
   if (rpg.activeThemeId === theme.id) return 'Equipped';
   if (rpg.unlockedThemes.some((entry) => entry.id === theme.id)) return 'Equip';
   return `Unlock Lv ${theme.unlockLevel}`;
+}
+
+function renderShopFilters(rpg) {
+  dom.menuShopFilters.innerHTML = SHOP_FILTERS.map((filter) => {
+    const count =
+      filter.id === 'all'
+        ? rpg.upgradeCatalog.length
+        : rpg.upgradeCatalog.filter((upgrade) => upgrade.category === filter.id).length;
+    return `
+      <button
+        class="shop-filter ${state.shopFilter === filter.id ? 'is-active' : ''}"
+        type="button"
+        data-shop-filter="${filter.id}"
+      >
+        <strong>${filter.label}</strong>
+        <span>${count} upgrades</span>
+      </button>
+    `;
+  }).join('');
+
+  dom.menuShopFilters.querySelectorAll('[data-shop-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      setShopFilter(button.dataset.shopFilter);
+    });
+  });
+}
+
+function renderShopSpotlight(rpg, catalog) {
+  const filter = SHOP_FILTERS.find((entry) => entry.id === state.shopFilter) || SHOP_FILTERS[0];
+  const owned = catalog.filter((upgrade) => upgrade.owned);
+  const unlocked = catalog.filter((upgrade) => upgrade.unlocked);
+  const nextUpgrade = catalog.find((upgrade) => !upgrade.owned && upgrade.unlocked) || catalog.find((upgrade) => !upgrade.owned);
+  const heroTitle =
+    state.shopFilter === 'computer'
+      ? rpg.loadout.deskRig
+      : state.shopFilter === 'systems'
+        ? 'Control surfaces online'
+        : state.shopFilter === 'agents'
+          ? `${owned.length}/${catalog.length} specialists enhanced`
+          : `${owned.length}/${catalog.length} upgrades owned`;
+  const heroCopy =
+    state.shopFilter === 'computer'
+      ? 'This lane is where the office stops looking starter and starts looking elite.'
+      : filter.copy;
+  const rarityHeadline = nextUpgrade ? `${menuRarityLabel(nextUpgrade.rarity)} unlock path` : 'Collection completed';
+  const nextLabel = nextUpgrade
+    ? nextUpgrade.unlocked
+      ? `${nextUpgrade.name} ready to buy`
+      : `${nextUpgrade.name} at level ${nextUpgrade.unlockLevel}`
+    : 'All upgrades in this lane purchased';
+
+  dom.menuShopSpotlight.className = `menu-shop-spotlight ${state.shopFilter === 'computer' ? 'is-computer' : ''}`;
+  dom.menuShopSpotlight.innerHTML = `
+    <div class="menu-shop-spotlight-copy">
+      <span class="info-kicker">${filter.label}</span>
+      <h4>${heroTitle}</h4>
+      <p>${heroCopy}</p>
+    </div>
+    <div class="menu-shop-spotlight-metrics">
+      <div class="shop-metric">
+        <span>Owned</span>
+        <strong>${owned.length}/${catalog.length}</strong>
+      </div>
+      <div class="shop-metric">
+        <span>Unlocked</span>
+        <strong>${unlocked.length}</strong>
+      </div>
+      <div class="shop-metric">
+        <span>${rarityHeadline}</span>
+        <strong>${nextLabel}</strong>
+      </div>
+      <div class="shop-metric">
+        <span>Wallet</span>
+        <strong>${formatCount(rpg.coins)} coins</strong>
+      </div>
+    </div>
+  `;
 }
 
 function openMenu(tab = state.menuTab) {
@@ -1470,10 +1744,17 @@ function renderMenuTabs() {
 }
 
 function renderMenuShop(rpg) {
-  dom.menuShopGrid.innerHTML = rpg.upgradeCatalog
+  const catalog = filteredUpgradeCatalog(rpg);
+  renderShopFilters(rpg);
+  renderShopSpotlight(rpg, catalog);
+  dom.menuShopGrid.className = `menu-card-grid ${state.shopFilter === 'computer' ? 'menu-card-grid--computer' : ''}`;
+  dom.menuShopGrid.innerHTML = catalog
     .map(
       (upgrade) => `
-        <article class="menu-card menu-card--shop ${upgrade.owned ? 'is-owned' : ''} ${upgrade.unlocked ? '' : 'is-locked'}" style="--card-accent:${menuAccent(upgrade.type)};">
+        <article
+          class="menu-card menu-card--shop ${upgrade.category === 'computer' ? 'menu-card--computer' : ''} ${upgrade.owned ? 'is-owned' : ''} ${upgrade.unlocked ? '' : 'is-locked'}"
+          style="--card-accent:${menuAccent(upgrade.type)}; --rarity-accent:${menuRarityTone(upgrade.rarity)};"
+        >
           <div class="menu-thumb" data-icon="${upgrade.icon}" data-type="${upgrade.type}">
             <span class="menu-thumb-label">${upgrade.preview}</span>
           </div>
@@ -1481,6 +1762,11 @@ function renderMenuShop(rpg) {
             <div class="menu-card-head">
               <span class="menu-card-tag">${menuTypeLabel(upgrade.type)}</span>
               <strong>${upgrade.name}</strong>
+            </div>
+            <div class="menu-card-meta">
+              <span>${menuCategoryLabel(upgrade.category)}</span>
+              <span>${menuRarityLabel(upgrade.rarity)}</span>
+              <span>Lv ${upgrade.unlockLevel}</span>
             </div>
             <p>${upgrade.description}</p>
             <div class="menu-impact">
@@ -1625,6 +1911,16 @@ function renderGameMenu() {
     dom.menuOwnedCopy.textContent = 'Starter office loadout.';
     dom.menuThemeName.textContent = 'Starter Loft';
     dom.menuThemeMood.textContent = 'Calm studio with warm wood and slate walls.';
+    dom.menuShopSpotlight.className = 'menu-shop-spotlight';
+    dom.menuShopSpotlight.innerHTML = `
+      <div class="menu-shop-spotlight-copy">
+        <span class="info-kicker">Office Shop</span>
+        <h4>Waiting for player sync</h4>
+        <p>Link GitHub progress to unlock the catalog, computer lab, and prestige-tier office upgrades.</p>
+      </div>
+    `;
+    dom.menuShopFilters.innerHTML = '';
+    dom.menuShopGrid.className = 'menu-card-grid';
     dom.menuShopGrid.innerHTML = '<div class="profile-empty">The shop will unlock after the player profile loads.</div>';
     dom.menuSceneGrid.innerHTML = '<div class="profile-empty">Scene previews appear after progression data is available.</div>';
     dom.menuInventoryGrid.innerHTML = '<div class="profile-empty">Inventory appears after the player sync finishes.</div>';
