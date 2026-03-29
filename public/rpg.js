@@ -64,6 +64,183 @@ export const TITLE_LADDER = [
   },
 ];
 
+export const OFFICE_TIER_LADDER = [
+  {
+    level: 1,
+    id: 'workbench-den',
+    name: 'Workbench Den',
+    flavor: 'A compact room where every upgrade still feels huge.',
+    unlocks: ['Layout Planner online', 'Starter builder XP rewards'],
+  },
+  {
+    level: 2,
+    id: 'patch-bunker',
+    name: 'Patch Bunker',
+    flavor: 'The room starts behaving like a real dev base.',
+    unlocks: ['Power Grid online', 'First expansion route visible'],
+  },
+  {
+    level: 3,
+    id: 'signal-loft',
+    name: 'Signal Loft',
+    flavor: 'Systems become deliberate instead of improvised.',
+    unlocks: ['Fabrication Bay online', 'Rare upgrade cadence improves'],
+  },
+  {
+    level: 4,
+    id: 'ops-wing',
+    name: 'Ops Wing',
+    flavor: 'You are no longer decorating a room. You are scaling a floor.',
+    unlocks: ['Cooling Bay unlocked', 'Builder XP rewards scale harder'],
+  },
+  {
+    level: 5,
+    id: 'control-floor',
+    name: 'Control Floor',
+    flavor: 'The office now looks curated, not assembled.',
+    unlocks: ['Service Room unlocked', 'Ambient systems tier up'],
+  },
+  {
+    level: 6,
+    id: 'launch-suite',
+    name: 'Launch Suite',
+    flavor: 'Power, comfort, and command surfaces start syncing together.',
+    unlocks: ['Automation Spine online', 'Elite office bonus track'],
+  },
+  {
+    level: 7,
+    id: 'master-studio',
+    name: 'Master Studio',
+    flavor: 'This is the point where the room starts feeling aspirational.',
+    unlocks: ['Command Deck unlocked', 'Legendary systems gain more value'],
+  },
+  {
+    level: 8,
+    id: 'prestige-nexus',
+    name: 'Prestige Nexus',
+    flavor: 'Everything in the office now reads as a prestige setup.',
+    unlocks: ['Architect Core online', 'Expanded build slots'],
+  },
+  {
+    level: 9,
+    id: 'mythic-citadel',
+    name: 'Mythic Citadel',
+    flavor: 'The room looks like a final-tier base in a dev RPG.',
+    unlocks: ['Master office bonus track', 'Mythic room prestige'],
+  },
+];
+
+export const STUDIO_EXPANSIONS = [
+  {
+    level: 1,
+    id: 'main-bay',
+    name: 'Main Bay',
+    summary: 'The core office floor where daily editing happens.',
+    reward: 'Base room editing online',
+    artIcon: 'dual-rig',
+  },
+  {
+    level: 2,
+    id: 'service-room',
+    name: 'Service Room',
+    summary: 'Utility layer inspired by room management loops and support systems.',
+    reward: 'Unlocks room service modules',
+    artIcon: 'server-rack',
+  },
+  {
+    level: 4,
+    id: 'cooling-bay',
+    name: 'Cooling Bay',
+    summary: 'Advanced hardware maintenance lane for higher-end desk upgrades.',
+    reward: 'Computer upgrades gain more office power',
+    artIcon: 'liquid-loop',
+  },
+  {
+    level: 6,
+    id: 'fabrication-wing',
+    name: 'Fabrication Wing',
+    summary: 'A dedicated workshop for refining layouts and tuning build flow.',
+    reward: 'Builder XP gains step up',
+    artIcon: 'monitor-wall',
+  },
+  {
+    level: 7,
+    id: 'command-deck',
+    name: 'Command Deck',
+    summary: 'Top-tier control surface for late game office prestige.',
+    reward: 'Command aura and elite unlock routing',
+    artIcon: 'master-desk',
+  },
+];
+
+export const SERVICE_MODULE_DEFS = [
+  {
+    id: 'layout-planner',
+    name: 'Layout Planner',
+    unlockLevel: 1,
+    artIcon: 'monitor-wall',
+    descriptions: [
+      'Offline',
+      'Turns office edits into meaningful Studio XP.',
+      'Builder XP from room edits scales up.',
+      'Layout reworks become a real progression source.',
+      'Master planner: every major edit pays off better.',
+    ],
+  },
+  {
+    id: 'power-grid',
+    name: 'Power Grid',
+    unlockLevel: 2,
+    artIcon: 'smart-lights',
+    descriptions: [
+      'Offline',
+      'Routes more energy through the room and boosts office power.',
+      'Ambient systems glow harder and room power climbs.',
+      'Elite rigs gain stronger synergy with the room.',
+      'Master grid: whole-room prestige power bonus.',
+    ],
+  },
+  {
+    id: 'fabrication-bay',
+    name: 'Fabrication Bay',
+    unlockLevel: 3,
+    artIcon: 'legendary-rig',
+    descriptions: [
+      'Offline',
+      'Gives future upgrades a small fabrication discount.',
+      'Upgrade pricing gets noticeably better.',
+      'Shop efficiency reaches late-game value.',
+      'Master forge: max discount lane online.',
+    ],
+  },
+  {
+    id: 'automation-spine',
+    name: 'Automation Spine',
+    unlockLevel: 5,
+    artIcon: 'router-node',
+    descriptions: [
+      'Offline',
+      'Activates utility rails and extra room slots.',
+      'Service room capacity expands.',
+      'Command systems gain more room to breathe.',
+      'Master spine: full office support lane online.',
+    ],
+  },
+  {
+    id: 'architect-core',
+    name: 'Architect Core',
+    unlockLevel: 7,
+    artIcon: 'quantum-core',
+    descriptions: [
+      'Offline',
+      'Prestige logic unlocks: the office feels curated end-to-end.',
+      'Late game layouts gain stronger synergy.',
+      'Mythic tier office rewards accelerate.',
+      'Architect maxed: full prestige office status.',
+    ],
+  },
+];
+
 export const THEME_DEFS = {
   starter: {
     id: 'starter',
@@ -646,9 +823,23 @@ export function getUpgradeById(id) {
 }
 
 function normalizeStoredState(stored = {}) {
+  const visitedThemeIds = Array.isArray(stored.visitedThemeIds) ? [...new Set(stored.visitedThemeIds.filter((id) => typeof id === 'string'))] : [];
+  const purchaseCosts =
+    stored.purchaseCosts && typeof stored.purchaseCosts === 'object'
+      ? Object.fromEntries(
+          Object.entries(stored.purchaseCosts).filter(
+            ([key, value]) => typeof key === 'string' && Number.isFinite(Number(value)),
+          ),
+        )
+      : {};
+
   return {
     purchasedIds: Array.isArray(stored.purchasedIds) ? [...new Set(stored.purchasedIds)] : [],
     activeThemeId: typeof stored.activeThemeId === 'string' ? stored.activeThemeId : '',
+    visitedThemeIds,
+    builderXp: Number.isFinite(Number(stored.builderXp)) ? Math.max(0, Math.floor(Number(stored.builderXp))) : 0,
+    builderActions: Number.isFinite(Number(stored.builderActions)) ? Math.max(0, Math.floor(Number(stored.builderActions))) : 0,
+    purchaseCosts,
   };
 }
 
@@ -660,8 +851,37 @@ function deriveCoinsEarned(player) {
   return Math.max(180, Math.floor(commits * 3.6 + repos * 90 + followers * 28 + level * 120));
 }
 
-function spentCoins(purchasedIds) {
-  return purchasedIds.reduce((sum, id) => sum + (getUpgradeById(id)?.cost || 0), 0);
+function rarityWeight(rarity) {
+  const weights = {
+    common: 1,
+    rare: 1.18,
+    epic: 1.42,
+    legendary: 1.78,
+    mythic: 2.2,
+  };
+  return weights[rarity] || 1;
+}
+
+function categoryWeight(category) {
+  const weights = {
+    computer: 1.18,
+    systems: 1.08,
+    atmosphere: 0.92,
+    agents: 1.02,
+  };
+  return weights[category] || 1;
+}
+
+function builderXpRewardForUpgrade(upgrade) {
+  return Math.max(60, Math.round(upgrade.cost * 0.52 * rarityWeight(upgrade.rarity)));
+}
+
+function officePowerForUpgrade(upgrade) {
+  return Math.max(36, Math.round(upgrade.cost * 0.34 * rarityWeight(upgrade.rarity) * categoryWeight(upgrade.category)));
+}
+
+function spentCoins(purchasedIds, purchaseCosts = {}) {
+  return purchasedIds.reduce((sum, id) => sum + Number(purchaseCosts[id] || getUpgradeById(id)?.cost || 0), 0);
 }
 
 function deriveDeskRig(purchasedIds) {
@@ -674,6 +894,128 @@ function deriveDeskRig(purchasedIds) {
   return 'Starter Rig';
 }
 
+function officeXpThreshold(level) {
+  const thresholds = [0, 260, 620, 1080, 1700, 2500, 3500, 4700, 6100];
+  if (level <= thresholds.length) return thresholds[level - 1];
+  const overflow = level - thresholds.length;
+  return thresholds[thresholds.length - 1] + overflow * 1800;
+}
+
+function getCurrentOfficeTier(level) {
+  return [...OFFICE_TIER_LADDER].reverse().find((entry) => level >= entry.level) || OFFICE_TIER_LADDER[0];
+}
+
+function getNextOfficeTier(level) {
+  return OFFICE_TIER_LADDER.find((entry) => entry.level > level) || null;
+}
+
+function deriveBuilderXpFloor(player, purchasedIds, visitedThemeIds) {
+  const passiveXp = Number(player?.progression?.level || 1) * 110;
+  const themeXp = visitedThemeIds.length * 55;
+  const upgradeXp = purchasedIds.reduce((sum, id) => {
+    const upgrade = getUpgradeById(id);
+    return sum + (upgrade ? builderXpRewardForUpgrade(upgrade) : 0);
+  }, 0);
+  return passiveXp + themeXp + upgradeXp;
+}
+
+function deriveOfficeLevel(builderXp) {
+  let level = 1;
+  while (level < OFFICE_TIER_LADDER.length && builderXp >= officeXpThreshold(level + 1)) {
+    level += 1;
+  }
+  return level;
+}
+
+function serviceModuleLevel(officeLevel, unlockLevel) {
+  if (officeLevel < unlockLevel) return 0;
+  return Math.min(4, 1 + Math.floor((officeLevel - unlockLevel) / 2));
+}
+
+function buildServiceModules(officeLevel) {
+  return SERVICE_MODULE_DEFS.map((module) => {
+    const level = serviceModuleLevel(officeLevel, module.unlockLevel);
+    return {
+      ...module,
+      level,
+      unlocked: level > 0,
+      maxed: level >= 4,
+      effect: module.descriptions[level],
+    };
+  });
+}
+
+function buildStudioExpansions(officeLevel) {
+  const currentExpansion = [...STUDIO_EXPANSIONS].reverse().find((expansion) => officeLevel >= expansion.level) || STUDIO_EXPANSIONS[0];
+  const nextExpansion = STUDIO_EXPANSIONS.find((expansion) => expansion.level > officeLevel) || null;
+  return STUDIO_EXPANSIONS.map((expansion) => ({
+    ...expansion,
+    unlocked: officeLevel >= expansion.level,
+    current: currentExpansion.id === expansion.id,
+    upcoming: nextExpansion?.id === expansion.id,
+  }));
+}
+
+function deriveOfficeState({ player, purchasedIds, builderXp, builderActions, visitedThemeIds, activeTheme }) {
+  const level = deriveOfficeLevel(builderXp);
+  const currentTier = getCurrentOfficeTier(level);
+  const nextTier = getNextOfficeTier(level);
+  const currentThreshold = officeXpThreshold(level);
+  const nextThreshold = nextTier ? officeXpThreshold(nextTier.level) : officeXpThreshold(level) + 1800;
+  const xpIntoLevel = Math.max(0, builderXp - currentThreshold);
+  const xpForLevel = Math.max(1, nextThreshold - currentThreshold);
+  const progress = nextTier ? xpIntoLevel / xpForLevel : 1;
+  const modules = buildServiceModules(level);
+  const expansions = buildStudioExpansions(level);
+
+  const plannerLevel = modules.find((module) => module.id === 'layout-planner')?.level || 0;
+  const powerGridLevel = modules.find((module) => module.id === 'power-grid')?.level || 0;
+  const fabricationLevel = modules.find((module) => module.id === 'fabrication-bay')?.level || 0;
+  const automationLevel = modules.find((module) => module.id === 'automation-spine')?.level || 0;
+  const architectLevel = modules.find((module) => module.id === 'architect-core')?.level || 0;
+
+  const editXpBonus = [0, 0.08, 0.14, 0.2, 0.28][plannerLevel];
+  const officePowerBonus = [0, 0.06, 0.1, 0.15, 0.22][powerGridLevel];
+  const fabricationDiscount = [0, 0.02, 0.04, 0.07, 0.1][fabricationLevel];
+  const roomSlots = 1 + automationLevel;
+  const prestigeBonus = [0, 0.04, 0.08, 0.12, 0.18][architectLevel];
+
+  const basePower =
+    purchasedIds.reduce((sum, id) => {
+      const upgrade = getUpgradeById(id);
+      return sum + (upgrade ? officePowerForUpgrade(upgrade) : 0);
+    }, 0) +
+    Number(player?.progression?.level || 1) * 28 +
+    Number(activeTheme?.unlockLevel || 1) * 34;
+
+  const power = Math.round(basePower * (1 + officePowerBonus + prestigeBonus));
+
+  return {
+    level,
+    currentTier,
+    nextTier,
+    builderXp,
+    builderActions,
+    visitedThemeIds,
+    progress,
+    xpIntoLevel,
+    xpForLevel,
+    xpToNext: nextTier ? Math.max(0, nextThreshold - builderXp) : 0,
+    power,
+    bonuses: {
+      editXpBonus,
+      officePowerBonus,
+      fabricationDiscount,
+      roomSlots,
+      prestigeBonus,
+    },
+    modules,
+    expansions,
+    currentExpansion: expansions.find((entry) => entry.current) || expansions[0],
+    nextExpansion: expansions.find((entry) => entry.upcoming) || null,
+  };
+}
+
 export function computeRpgState(player, stored = {}) {
   const normalized = normalizeStoredState(stored);
   const level = Number(player?.progression?.level || 1);
@@ -681,31 +1023,53 @@ export function computeRpgState(player, stored = {}) {
   const nextTitle = getNextTitle(level);
   const unlockedThemes = getUnlockedThemes(level);
   const purchasedIds = normalized.purchasedIds.filter((id) => Boolean(getUpgradeById(id)));
-  const coinsEarned = deriveCoinsEarned(player);
-  const coinsSpent = spentCoins(purchasedIds);
-  const coins = Math.max(0, coinsEarned - coinsSpent);
+  const purchaseCosts = Object.fromEntries(
+    Object.entries(normalized.purchaseCosts).filter(([id]) => purchasedIds.includes(id)),
+  );
   const defaultTheme = unlockedThemes[unlockedThemes.length - 1] || THEME_DEFS.starter;
   const activeThemeId = unlockedThemes.some((theme) => theme.id === normalized.activeThemeId)
     ? normalized.activeThemeId
     : defaultTheme.id;
   const activeTheme = getThemeById(activeThemeId);
+  const builderXpFloor = deriveBuilderXpFloor(player, purchasedIds, normalized.visitedThemeIds);
+  const builderXp = Math.max(normalized.builderXp, builderXpFloor);
+  const builderActions = Math.max(normalized.builderActions, purchasedIds.length + normalized.visitedThemeIds.length);
+  const office = deriveOfficeState({
+    player,
+    purchasedIds,
+    builderXp,
+    builderActions,
+    visitedThemeIds: normalized.visitedThemeIds,
+    activeTheme,
+  });
+  const coinsEarned = deriveCoinsEarned(player);
+  const coinsSpent = spentCoins(purchasedIds, purchaseCosts);
+  const coins = Math.max(0, coinsEarned - coinsSpent);
   const upgradeCatalog = UPGRADE_DEFS.map((upgrade) => ({
     ...upgrade,
+    builderXpReward: builderXpRewardForUpgrade(upgrade),
+    officePower: officePowerForUpgrade(upgrade),
+    price: purchasedIds.includes(upgrade.id)
+      ? Number(purchaseCosts[upgrade.id] || upgrade.cost)
+      : Math.max(20, Math.round(upgrade.cost * (1 - office.bonuses.fabricationDiscount))),
     unlocked: level >= upgrade.unlockLevel,
     owned: purchasedIds.includes(upgrade.id),
-    affordable: coins >= upgrade.cost,
+    affordable: coins >= (purchasedIds.includes(upgrade.id) ? Number(purchaseCosts[upgrade.id] || upgrade.cost) : Math.max(20, Math.round(upgrade.cost * (1 - office.bonuses.fabricationDiscount)))),
   }));
 
   const loadout = {
     scene: activeTheme.name,
     sceneMood: activeTheme.mood,
     deskRig: deriveDeskRig(purchasedIds),
+    studioTier: office.currentTier.name,
+    officePower: office.power,
     agents: [
       purchasedIds.includes('trace-plus') ? 'Trace Plus' : 'Trace',
       purchasedIds.includes('scout-prime') ? 'Scout Prime' : 'Scout',
       purchasedIds.includes('helper-drone') ? 'Helper Drone' : 'Codex support',
     ],
     officePerks: upgradeCatalog.filter((upgrade) => upgrade.owned).map((upgrade) => upgrade.name),
+    modules: office.modules.filter((module) => module.unlocked).map((module) => `${module.name} Lv ${module.level}`),
   };
 
   return {
@@ -726,9 +1090,14 @@ export function computeRpgState(player, stored = {}) {
     coinsEarned,
     coinsSpent,
     coins,
+    office,
     storage: {
       purchasedIds,
       activeThemeId,
+      visitedThemeIds: normalized.visitedThemeIds,
+      builderXp,
+      builderActions,
+      purchaseCosts,
     },
     loadout,
   };

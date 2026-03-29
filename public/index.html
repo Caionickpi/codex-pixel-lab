@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Codex Pixel Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -179,36 +182,48 @@
           <div>
             <div class="info-kicker">Game systems</div>
             <h2>Studio Menu</h2>
-            <p>Manage scenes, upgrades, and everything already unlocked in the office.</p>
+            <p>Run the office like a dev RPG base: grow the HQ, buy upgrades, and unlock better rooms.</p>
           </div>
           <button class="game-menu-close" id="menuClose" type="button">Close</button>
         </header>
 
         <section class="game-menu-topline">
           <div class="menu-hero-card">
-            <span class="wallet-label">Wallet</span>
+            <span class="wallet-label" id="menuCoinLabel">Wallet</span>
             <strong id="menuCoinCount">0 coins</strong>
             <span class="wallet-copy" id="menuHeroCopy">Link GitHub progress to unlock the full shop.</span>
           </div>
           <div class="menu-hero-card">
-            <span class="wallet-label">Owned upgrades</span>
+            <span class="wallet-label" id="menuOwnedLabel">Owned upgrades</span>
             <strong id="menuOwnedCount">0 items</strong>
             <span class="wallet-copy" id="menuOwnedCopy">Starter office loadout.</span>
           </div>
           <div class="menu-hero-card">
-            <span class="wallet-label">Active scene</span>
+            <span class="wallet-label" id="menuThemeLabel">Active scene</span>
             <strong id="menuThemeName">Starter Loft</strong>
             <span class="wallet-copy" id="menuThemeMood">Calm studio with warm wood and slate walls.</span>
           </div>
         </section>
 
         <nav class="menu-tabs">
-          <button class="menu-tab is-active" id="menuTabShop" type="button" data-tab="shop">Shop</button>
+          <button class="menu-tab is-active" id="menuTabHQ" type="button" data-tab="hq">HQ</button>
+          <button class="menu-tab" id="menuTabShop" type="button" data-tab="shop">Shop</button>
           <button class="menu-tab" id="menuTabScenes" type="button" data-tab="scenes">Scenes</button>
           <button class="menu-tab" id="menuTabInventory" type="button" data-tab="inventory">Inventory</button>
         </nav>
 
-        <section class="menu-panel is-active" id="menuPanelShop" data-panel="shop">
+        <section class="menu-panel is-active" id="menuPanelHQ" data-panel="hq">
+          <div class="menu-panel-head">
+            <div>
+              <div class="info-kicker">Studio progression</div>
+              <h3>Builder HQ</h3>
+            </div>
+            <span class="menu-panel-copy">Grow the office like a real dev base: XP, power, service modules, and room expansions.</span>
+          </div>
+          <div class="builder-grid" id="menuBuilderGrid"></div>
+        </section>
+
+        <section class="menu-panel" id="menuPanelShop" data-panel="shop">
           <div class="menu-panel-head">
             <div>
               <div class="info-kicker">Upgrade catalog</div>

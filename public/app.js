@@ -1,5 +1,7 @@
 ﻿import { THEME_DEFS, computeRpgState, getCurrentTitle, getThemeById, getUpgradeById } from './rpg.js';
 
+import { renderUpgradeArt } from './upgrade-art.js';
+
 const TILE_SIZE = 16;
 const OFFICE_COLS = 22;
 const OFFICE_ROWS = 13;
@@ -104,18 +106,24 @@ const dom = {
   gameMenu: document.getElementById('gameMenu'),
   gameMenuBackdrop: document.getElementById('gameMenuBackdrop'),
   menuClose: document.getElementById('menuClose'),
+  menuTabHQ: document.getElementById('menuTabHQ'),
   menuTabShop: document.getElementById('menuTabShop'),
   menuTabScenes: document.getElementById('menuTabScenes'),
   menuTabInventory: document.getElementById('menuTabInventory'),
+  menuPanelHQ: document.getElementById('menuPanelHQ'),
   menuPanelShop: document.getElementById('menuPanelShop'),
   menuPanelScenes: document.getElementById('menuPanelScenes'),
   menuPanelInventory: document.getElementById('menuPanelInventory'),
+  menuCoinLabel: document.getElementById('menuCoinLabel'),
   menuCoinCount: document.getElementById('menuCoinCount'),
   menuHeroCopy: document.getElementById('menuHeroCopy'),
+  menuOwnedLabel: document.getElementById('menuOwnedLabel'),
   menuOwnedCount: document.getElementById('menuOwnedCount'),
   menuOwnedCopy: document.getElementById('menuOwnedCopy'),
+  menuThemeLabel: document.getElementById('menuThemeLabel'),
   menuThemeName: document.getElementById('menuThemeName'),
   menuThemeMood: document.getElementById('menuThemeMood'),
+  menuBuilderGrid: document.getElementById('menuBuilderGrid'),
   menuShopSpotlight: document.getElementById('menuShopSpotlight'),
   menuShopFilters: document.getElementById('menuShopFilters'),
   menuShopGrid: document.getElementById('menuShopGrid'),
@@ -160,19 +168,19 @@ const state = {
   rpgStorage: loadStoredRpgState(),
   playerLoading: false,
   lastPlayerWorkspace: '',
-  menuTab: 'shop',
+  menuTab: 'hq',
   shopFilter: 'all',
   inputDirty: false,
   lastFrameAt: performance.now(),
 };
 
-const MENU_TABS = ['shop', 'scenes', 'inventory'];
+const MENU_TABS = ['hq', 'shop', 'scenes', 'inventory'];
 const SHOP_FILTERS = [
-  { id: 'all', label: 'All systems', copy: 'Everything available for the studio.' },
-  { id: 'computer', label: 'Computer Lab', copy: 'Rigs, displays, cooling, and endgame desk tech.' },
-  { id: 'systems', label: 'Studio Systems', copy: 'Ops, telemetry, sync, and reactive control surfaces.' },
-  { id: 'atmosphere', label: 'Atmosphere', copy: 'Lighting, lounge, decor, and room identity.' },
-  { id: 'agents', label: 'Agents', copy: 'Specialist upgrades for Scout, Trace, and support bots.' },
+  { id: 'all', label: 'All systems', copy: 'Full room collection.' },
+  { id: 'computer', label: 'Computer Lab', copy: 'Rigs, cooling, wall screens.' },
+  { id: 'systems', label: 'Studio Systems', copy: 'Ops, sync, live signals.' },
+  { id: 'atmosphere', label: 'Atmosphere', copy: 'Lighting, lounge, identity.' },
+  { id: 'agents', label: 'Agents', copy: 'Scout, Trace, support bots.' },
 ];
 
 function safeJsonParse(input, fallback = null) {
@@ -186,14 +194,22 @@ function safeJsonParse(input, fallback = null) {
 function loadStoredRpgState() {
   try {
     const stored = window.localStorage.getItem(RPG_STORAGE_KEY);
-    return safeJsonParse(stored, { purchasedIds: [], activeThemeId: '' }) || {
+    return safeJsonParse(stored, { purchasedIds: [], activeThemeId: '', visitedThemeIds: [], builderXp: 0, builderActions: 0, purchaseCosts: {} }) || {
       purchasedIds: [],
       activeThemeId: '',
+      visitedThemeIds: [],
+      builderXp: 0,
+      builderActions: 0,
+      purchaseCosts: {},
     };
   } catch {
     return {
       purchasedIds: [],
       activeThemeId: '',
+      visitedThemeIds: [],
+      builderXp: 0,
+      builderActions: 0,
+      purchaseCosts: {},
     };
   }
 }
@@ -526,6 +542,7 @@ function drawRoomShell(scale, timeSeconds) {
   drawWindow(scale, 2, 1, 5, 2.4, timeSeconds);
   drawWindow(scale, 8.4, 1, 5, 2.4, timeSeconds + 0.65);
   drawWindow(scale, 14.8, 1, 5, 2.4, timeSeconds + 1.3);
+  drawSceneMood(scale, timeSeconds, theme, palette);
 
   ctx.fillStyle = 'rgba(228, 235, 255, 0.2)';
   ctx.fillRect(scale.offsetX, floorY - 5, width, 5);
@@ -556,6 +573,13 @@ function drawWindow(scale, col, row, widthTiles, heightTiles, timeSeconds) {
   ctx.fillStyle = sky;
   ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
 
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x + 2, y + 2, width - 4, height - 4);
+  ctx.clip();
+  drawWindowSceneLayer(x, y, width, height, timeSeconds, theme);
+  ctx.restore();
+
   ctx.fillStyle = 'rgba(255, 255, 255, 0.52)';
   for (let i = 0; i < 7; i += 1) {
     const starX = x + 6 + ((i * 11 + Math.floor(timeSeconds * 4)) % Math.max(10, width - 12));
@@ -578,6 +602,45 @@ function drawWindow(scale, col, row, widthTiles, heightTiles, timeSeconds) {
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
   ctx.fillRect(x + width / 2 - 2, y, 4, height);
+}
+
+function drawWindowSceneLayer(x, y, width, height, timeSeconds, theme) {
+  if (theme.id === 'cloud' || theme.id === 'skyforge') {
+    ctx.fillStyle = theme.id === 'cloud' ? 'rgba(235, 246, 255, 0.12)' : 'rgba(255, 228, 180, 0.14)';
+    for (let i = 0; i < 3; i += 1) {
+      const drift = ((timeSeconds * 10 + i * 36) % (width + 36)) - 30;
+      ctx.fillRect(x + drift, y + 10 + i * 10, 24 + i * 8, 6);
+      ctx.fillRect(x + drift + 8, y + 14 + i * 10, 18 + i * 6, 5);
+    }
+  }
+
+  if (theme.id === 'orbital') {
+    ctx.fillStyle = 'rgba(255, 176, 122, 0.22)';
+    ctx.beginPath();
+    ctx.arc(x + width * 0.76, y + height * 0.34, 11, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(164, 230, 255, 0.38)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(x + width * 0.76, y + height * 0.34, 18, 7, -0.32, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  if (theme.id === 'afterglow' || theme.id === 'neon') {
+    const haze = ctx.createLinearGradient(0, y + height * 0.2, 0, y + height);
+    haze.addColorStop(0, theme.id === 'afterglow' ? 'rgba(255, 188, 122, 0.12)' : 'rgba(255, 143, 207, 0.08)');
+    haze.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = haze;
+    ctx.fillRect(x + 2, y + 2, width - 4, height - 4);
+  }
+
+  if (theme.id === 'signal' || theme.id === 'server') {
+    ctx.fillStyle = theme.id === 'signal' ? 'rgba(166, 226, 255, 0.16)' : 'rgba(121, 255, 236, 0.14)';
+    for (let i = 0; i < 5; i += 1) {
+      const barHeight = 10 + ((i * 5) % 14);
+      ctx.fillRect(x + 10 + i * ((width - 20) / 5), y + height - barHeight - 5, 4, barHeight);
+    }
+  }
 }
 
 function drawCeilingLamp(scale, col, timeSeconds) {
@@ -603,6 +666,76 @@ function drawCeilingLamp(scale, col, timeSeconds) {
   glow.addColorStop(1, 'rgba(255, 225, 163, 0)');
   ctx.fillStyle = glow;
   ctx.fillRect(x - 120, y - 20, 240, 180);
+}
+
+function drawSceneMood(scale, timeSeconds, theme, palette) {
+  const unit = TILE_SIZE * scale.zoom;
+  const x = scale.offsetX;
+  const y = scale.offsetY;
+  const width = OFFICE_COLS * unit;
+
+  if (theme.id === 'signal') {
+    ctx.strokeStyle = 'rgba(166, 226, 255, 0.18)';
+    ctx.lineWidth = 2;
+    for (let i = 0; i < 4; i += 1) {
+      const lineY = y + (1.2 + i * 0.48) * unit + Math.sin(timeSeconds * 1.2 + i) * 1.2;
+      ctx.beginPath();
+      ctx.moveTo(x + 1.2 * unit, lineY);
+      ctx.lineTo(x + width - 1.2 * unit, lineY);
+      ctx.stroke();
+    }
+  }
+
+  if (theme.id === 'neon') {
+    const glow = 0.14 + Math.sin(timeSeconds * 2.4) * 0.05;
+    ctx.fillStyle = `rgba(${theme.accent}, ${glow})`;
+    ctx.fillRect(x + 1.1 * unit, y + 4.18 * unit, width - 2.2 * unit, 0.12 * unit);
+    ctx.fillStyle = `rgba(${theme.secondary}, ${glow * 0.75})`;
+    ctx.fillRect(x + 1.4 * unit, y + 4.36 * unit, width - 2.8 * unit, 0.08 * unit);
+  }
+
+  if (theme.id === 'server') {
+    ctx.fillStyle = 'rgba(121, 255, 236, 0.05)';
+    for (let i = 0; i < 5; i += 1) {
+      const ventX = x + (1.4 + i * 4.1) * unit;
+      ctx.fillRect(ventX, y + 4.24 * unit, 1.3 * unit, 0.08 * unit);
+    }
+    ctx.fillStyle = 'rgba(180, 220, 255, 0.04)';
+    ctx.fillRect(x + 0.8 * unit, y + 4.35 * unit, width - 1.6 * unit, 0.22 * unit);
+  }
+
+  if (theme.id === 'cloud') {
+    ctx.fillStyle = 'rgba(236, 245, 255, 0.09)';
+    ctx.fillRect(x + 1.8 * unit, y + 0.8 * unit, 2.1 * unit, 0.18 * unit);
+    ctx.fillRect(x + 17.1 * unit, y + 0.8 * unit, 2.1 * unit, 0.18 * unit);
+  }
+
+  if (theme.id === 'skyforge') {
+    const beam = ctx.createLinearGradient(x + 16 * unit, y, x + 21 * unit, y + 4 * unit);
+    beam.addColorStop(0, 'rgba(255, 214, 142, 0)');
+    beam.addColorStop(1, 'rgba(255, 214, 142, 0.18)');
+    ctx.fillStyle = beam;
+    ctx.fillRect(x + 14.6 * unit, y + 0.2 * unit, 6 * unit, 4.2 * unit);
+  }
+
+  if (theme.id === 'orbital') {
+    ctx.strokeStyle = 'rgba(119, 255, 214, 0.16)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x + 10.9 * unit, y + 2.2 * unit, 2.7 * unit, Math.PI * 1.05, Math.PI * 1.88);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x + 10.9 * unit, y + 2.2 * unit, 3.3 * unit, Math.PI * 1.08, Math.PI * 1.84);
+    ctx.stroke();
+  }
+
+  if (theme.id === 'afterglow') {
+    const floorGlow = ctx.createLinearGradient(0, y + 4.1 * unit, 0, y + 9 * unit);
+    floorGlow.addColorStop(0, 'rgba(255, 189, 117, 0.04)');
+    floorGlow.addColorStop(1, 'rgba(150, 255, 235, 0.07)');
+    ctx.fillStyle = floorGlow;
+    ctx.fillRect(x + 0.9 * unit, y + 4.1 * unit, width - 1.8 * unit, 5.2 * unit);
+  }
 }
 
 function drawRug(scale, col, row, widthTiles, heightTiles, colors) {
@@ -644,6 +777,10 @@ function drawFloor(scale) {
 
 function drawAmbient(scale, timeSeconds) {
   const palette = runtimePalette(state.snapshot?.runtime?.status);
+  const officeLevel = state.rpg?.office?.level || 1;
+  const officePower = state.rpg?.office?.power || 0;
+  const prestigeBoost = Math.min(0.14, officeLevel * 0.012);
+  const powerGlow = Math.min(0.1, officePower / 22000);
   const warm = ctx.createRadialGradient(
     scale.offsetX + 9.6 * TILE_SIZE * scale.zoom,
     scale.offsetY + 7.6 * TILE_SIZE * scale.zoom,
@@ -652,21 +789,37 @@ function drawAmbient(scale, timeSeconds) {
     scale.offsetY + 7.6 * TILE_SIZE * scale.zoom,
     250,
   );
-  warm.addColorStop(0, `rgba(${palette.accent}, 0.22)`);
+  warm.addColorStop(0, `rgba(${palette.accent}, ${0.2 + prestigeBoost + powerGlow})`);
   warm.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = warm;
   ctx.fillRect(0, 0, dom.stage.clientWidth, dom.stage.clientHeight);
 
-  const coolAlpha = 0.08 + Math.sin(timeSeconds * 1.6) * 0.02;
+  const coolAlpha = 0.08 + prestigeBoost * 0.8 + powerGlow * 0.6 + Math.sin(timeSeconds * 1.6) * 0.02;
   ctx.fillStyle = `rgba(${palette.secondary},${coolAlpha})`;
   ctx.fillRect(scale.offsetX + 14.3 * TILE_SIZE * scale.zoom, scale.offsetY + 5.1 * TILE_SIZE * scale.zoom, 1.25 * TILE_SIZE * scale.zoom, 0.85 * TILE_SIZE * scale.zoom);
   ctx.fillRect(scale.offsetX + 8.35 * TILE_SIZE * scale.zoom, scale.offsetY + 6.1 * TILE_SIZE * scale.zoom, 1.3 * TILE_SIZE * scale.zoom, 0.85 * TILE_SIZE * scale.zoom);
 
-  ctx.fillStyle = `rgba(${palette.secondary}, 0.06)`;
-  for (let i = 0; i < 8; i += 1) {
+  ctx.fillStyle = `rgba(${palette.secondary}, ${0.06 + prestigeBoost * 0.5})`;
+  const particleCount = 8 + Math.floor(officeLevel * 1.2);
+  for (let i = 0; i < particleCount; i += 1) {
     const particleX = scale.offsetX + (((timeSeconds * 26 + i * 38) % (OFFICE_COLS * TILE_SIZE)) * scale.zoom);
     const particleY = scale.offsetY + 1.6 * TILE_SIZE * scale.zoom + Math.sin(timeSeconds * 0.9 + i) * 8 + (i % 3) * 22;
     ctx.fillRect(Math.round(particleX), Math.round(particleY), 2, 2);
+  }
+
+  if (officeLevel >= 5) {
+    const halo = ctx.createRadialGradient(
+      scale.offsetX + 9.6 * TILE_SIZE * scale.zoom,
+      scale.offsetY + 7.8 * TILE_SIZE * scale.zoom,
+      10,
+      scale.offsetX + 9.6 * TILE_SIZE * scale.zoom,
+      scale.offsetY + 7.8 * TILE_SIZE * scale.zoom,
+      170,
+    );
+    halo.addColorStop(0, `rgba(${palette.secondary}, ${0.12 + powerGlow})`);
+    halo.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = halo;
+    ctx.fillRect(scale.offsetX + 4 * TILE_SIZE * scale.zoom, scale.offsetY + 4.6 * TILE_SIZE * scale.zoom, 12 * TILE_SIZE * scale.zoom, 7 * TILE_SIZE * scale.zoom);
   }
 
   const vignette = ctx.createLinearGradient(0, scale.offsetY, 0, scale.offsetY + OFFICE_ROWS * TILE_SIZE * scale.zoom);
@@ -760,6 +913,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
   const unit = TILE_SIZE * scale.zoom;
   const offsetX = scale.offsetX;
   const offsetY = scale.offsetY;
+  const pulseFast = 0.5 + Math.sin(timeSeconds * 3.4) * 0.5;
+  const pulseSlow = 0.5 + Math.sin(timeSeconds * 1.6) * 0.5;
   const hasAdvancedRig =
     hasUpgrade('ultrawide-array') ||
     hasUpgrade('legendary-rig') ||
@@ -885,6 +1040,9 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillStyle = `rgba(${palette.accent}, 0.1)`;
     ctx.fillRect(scale.offsetX + 0.9 * TILE_SIZE * scale.zoom, scale.offsetY + 0.7 * TILE_SIZE * scale.zoom, 8.2 * TILE_SIZE * scale.zoom, 0.28 * TILE_SIZE * scale.zoom);
     ctx.fillRect(scale.offsetX + 12.9 * TILE_SIZE * scale.zoom, scale.offsetY + 0.7 * TILE_SIZE * scale.zoom, 8.2 * TILE_SIZE * scale.zoom, 0.28 * TILE_SIZE * scale.zoom);
+    const sweepX = offsetX + (1.1 + pulseFast * 18.5) * unit;
+    ctx.fillStyle = `rgba(${palette.accent}, ${0.08 + pulseFast * 0.08})`;
+    ctx.fillRect(sweepX, offsetY + 0.7 * unit, 0.8 * unit, 3.9 * unit);
   }
 
   if (hasUpgrade('signal-router')) {
@@ -896,6 +1054,16 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(routerX + 4, routerY + 3, 10, 2);
     ctx.fillRect(routerX + 7, routerY - 6, 2, 6);
     ctx.fillRect(routerX + 13, routerY - 4, 2, 4);
+    ctx.strokeStyle = `rgba(${palette.secondary}, ${0.24 + pulseFast * 0.26})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(routerX + 9, routerY + 8);
+    ctx.lineTo(routerX - 36 + pulseFast * 18, routerY + 18);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(routerX + 9, routerY + 8);
+    ctx.lineTo(routerX + 44 - pulseFast * 16, routerY + 18);
+    ctx.stroke();
   }
 
   if (hasUpgrade('dev-poster-pack')) {
@@ -903,6 +1071,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(scale.offsetX + 2.9 * TILE_SIZE * scale.zoom, scale.offsetY + 1.4 * TILE_SIZE * scale.zoom, 0.8 * TILE_SIZE * scale.zoom, 1.1 * TILE_SIZE * scale.zoom);
     ctx.fillStyle = `rgba(${palette.secondary}, 0.78)`;
     ctx.fillRect(scale.offsetX + 4.1 * TILE_SIZE * scale.zoom, scale.offsetY + 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom, 1.25 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.accent}, ${0.12 + pulseSlow * 0.08})`;
+    ctx.fillRect(scale.offsetX + 3.1 * TILE_SIZE * scale.zoom, scale.offsetY + 1.56 * TILE_SIZE * scale.zoom, 0.18 * TILE_SIZE * scale.zoom, 0.92 * TILE_SIZE * scale.zoom);
   }
 
   if (hasUpgrade('coffee-station')) {
@@ -914,6 +1084,25 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(stationX + 2, stationY + 2, 8, 4);
     ctx.fillStyle = '#f8edd1';
     ctx.fillRect(stationX + 14, stationY + 7, 5, 5);
+    ctx.strokeStyle = `rgba(255, 240, 220, ${0.28 + pulseSlow * 0.18})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(stationX + 5, stationY + 2);
+    ctx.quadraticCurveTo(stationX + 2, stationY - 6 - pulseSlow * 6, stationX + 6, stationY - 12);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(stationX + 9, stationY + 2);
+    ctx.quadraticCurveTo(stationX + 12, stationY - 4 - pulseFast * 5, stationX + 10, stationY - 11);
+    ctx.stroke();
+  }
+
+  if (hasUpgrade('window-garden')) {
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.12 + pulseSlow * 0.1})`;
+    for (let i = 0; i < 4; i += 1) {
+      const px = offsetX + (16.8 + i * 0.62 + Math.sin(timeSeconds + i) * 0.08) * unit;
+      const py = offsetY + (4.2 + i * 0.32 - pulseSlow * 0.16) * unit;
+      ctx.fillRect(px, py, 3, 3);
+    }
   }
 
   if (hasUpgrade('cable-management')) {
@@ -924,11 +1113,19 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.lineTo(scale.offsetX + 8.8 * TILE_SIZE * scale.zoom, scale.offsetY + 9.1 * TILE_SIZE * scale.zoom);
     ctx.lineTo(scale.offsetX + 9.7 * TILE_SIZE * scale.zoom, scale.offsetY + 9.1 * TILE_SIZE * scale.zoom);
     ctx.stroke();
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.45 + pulseFast * 0.28})`;
+    ctx.fillRect(scale.offsetX + (8.7 + pulseFast * 0.9) * unit, scale.offsetY + 9.02 * unit, 0.14 * unit, 0.14 * unit);
   }
 
   if (hasUpgrade('keyboard-upgrade')) {
-    ctx.fillStyle = `rgba(${palette.accent}, 0.76)`;
-    ctx.fillRect(scale.offsetX + 8.55 * TILE_SIZE * scale.zoom, scale.offsetY + 6.86 * TILE_SIZE * scale.zoom, 0.72 * TILE_SIZE * scale.zoom, 0.12 * TILE_SIZE * scale.zoom);
+    const keyboardX = scale.offsetX + 8.55 * TILE_SIZE * scale.zoom;
+    const keyboardY = scale.offsetY + 6.86 * TILE_SIZE * scale.zoom;
+    const segmentWidth = 0.18 * unit;
+    for (let i = 0; i < 4; i += 1) {
+      const alpha = 0.46 + ((pulseFast + i * 0.18) % 1) * 0.3;
+      ctx.fillStyle = i % 2 === 0 ? `rgba(${palette.accent}, ${alpha})` : `rgba(${palette.secondary}, ${alpha * 0.9})`;
+      ctx.fillRect(keyboardX + i * segmentWidth, keyboardY, segmentWidth, 0.12 * unit);
+    }
   }
 
   if (hasUpgrade('focus-timer')) {
@@ -936,7 +1133,7 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     const timerY = scale.offsetY + 2.7 * TILE_SIZE * scale.zoom;
     ctx.fillStyle = 'rgba(10, 14, 20, 0.92)';
     ctx.fillRect(timerX, timerY, 22, 12);
-    ctx.fillStyle = `rgba(${palette.secondary}, 0.85)`;
+    ctx.fillStyle = `rgba(${palette.secondary}, ${pulseFast > 0.45 ? 0.85 : 0.28})`;
     ctx.fillRect(timerX + 4, timerY + 4, 14, 4);
   }
 
@@ -956,6 +1153,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
       ctx.fillStyle = `rgba(${palette.secondary}, ${ledAlpha})`;
       ctx.fillRect(rackX + 8, ledY, rackW - 16, 3);
     }
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.1 + pulseFast * 0.08})`;
+    ctx.fillRect(rackX - 0.2 * unit, rackY + rackH, rackW + 0.4 * unit, 0.1 * unit);
   }
 
   if (hasUpgrade('holo-board')) {
@@ -969,6 +1168,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.strokeRect(holoX, holoY, holoW, holoH);
     ctx.fillStyle = `rgba(${palette.secondary}, 0.3)`;
     ctx.fillRect(holoX + 8, holoY + holoH / 2 - 2, holoW - 16, 4);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.16 + pulseFast * 0.12})`;
+    ctx.fillRect(holoX + pulseFast * (holoW - 12), holoY + 4, 8, holoH - 8);
   }
 
   if (hasUpgrade('mini-fridge')) {
@@ -978,6 +1179,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(fridgeX, fridgeY, 0.9 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom);
     ctx.fillStyle = '#a7b4c7';
     ctx.fillRect(fridgeX + 3, fridgeY + 8, 0.9 * TILE_SIZE * scale.zoom - 6, 2);
+    ctx.fillStyle = `rgba(150, 220, 255, ${0.14 + pulseSlow * 0.12})`;
+    ctx.fillRect(fridgeX + 4, fridgeY + 4, 0.9 * TILE_SIZE * scale.zoom - 8, 0.36 * TILE_SIZE * scale.zoom);
   }
 
   if (hasUpgrade('ambient-speakers')) {
@@ -988,6 +1191,14 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillStyle = `rgba(${palette.secondary}, 0.7)`;
     ctx.fillRect(scale.offsetX + 7.95 * TILE_SIZE * scale.zoom, speakerY + 4, 6, 6);
     ctx.fillRect(scale.offsetX + 10.65 * TILE_SIZE * scale.zoom, speakerY + 4, 6, 6);
+    ctx.strokeStyle = `rgba(${palette.secondary}, ${0.16 + pulseFast * 0.14})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(scale.offsetX + 8.3 * TILE_SIZE * scale.zoom, speakerY + 8, 8 + pulseFast * 4, -0.4, 0.4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(scale.offsetX + 10.95 * TILE_SIZE * scale.zoom, speakerY + 8, 8 + pulseFast * 4, Math.PI - 0.4, Math.PI + 0.4);
+    ctx.stroke();
   }
 
   if (hasUpgrade('wall-terminal')) {
@@ -999,6 +1210,8 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.strokeRect(terminalX, terminalY, 1.35 * TILE_SIZE * scale.zoom, 0.82 * TILE_SIZE * scale.zoom);
     ctx.fillStyle = `rgba(${palette.secondary}, 0.75)`;
     ctx.fillRect(terminalX + 6, terminalY + 5, 0.75 * TILE_SIZE * scale.zoom, 4);
+    ctx.fillStyle = `rgba(${palette.accent}, ${pulseFast > 0.5 ? 0.74 : 0.18})`;
+    ctx.fillRect(terminalX + 6 + 0.75 * TILE_SIZE * scale.zoom - 6, terminalY + 5, 4, 4);
   }
 
   if (hasUpgrade('patch-bay')) {
@@ -1006,9 +1219,20 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     const bayY = scale.offsetY + 9.08 * TILE_SIZE * scale.zoom;
     ctx.fillStyle = '#171b27';
     ctx.fillRect(bayX, bayY, 1.75 * TILE_SIZE * scale.zoom, 0.55 * TILE_SIZE * scale.zoom);
-    ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.35)`;
     for (let i = 0; i < 5; i += 1) {
+      const active = Math.floor(timeSeconds * 6 + i) % 5 === i;
+      ctx.fillStyle = active ? `rgba(${palette.secondary}, 0.9)` : `rgba(${palette.secondary}, 0.28)`;
       ctx.fillRect(bayX + 6 + i * 7, bayY + 4, 3, 3);
+    }
+  }
+
+  if (hasUpgrade('plant-lab')) {
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.14 + pulseSlow * 0.08})`;
+    for (let i = 0; i < 5; i += 1) {
+      const sporeX = offsetX + (17.8 + Math.sin(timeSeconds * 1.3 + i) * 0.5) * unit;
+      const sporeY = offsetY + (6.6 + i * 0.45 + Math.cos(timeSeconds * 1.1 + i) * 0.22) * unit;
+      ctx.fillRect(sporeX, sporeY, 2, 2);
     }
   }
 
@@ -1020,6 +1244,13 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillStyle = `rgba(${palette.secondary}, 0.82)`;
     ctx.fillRect(droneX - 5, droneY - 1, 10, 2);
     ctx.fillRect(droneX - 1, droneY - 5, 2, 10);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.08 + pulseSlow * 0.08})`;
+    ctx.beginPath();
+    ctx.moveTo(droneX, droneY + 6);
+    ctx.lineTo(droneX - 16, droneY + 24);
+    ctx.lineTo(droneX + 16, droneY + 24);
+    ctx.closePath();
+    ctx.fill();
   }
 
   if (hasUpgrade('arcade-corner')) {
@@ -1034,16 +1265,21 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
     ctx.fillRect(cabinetX + cabinetW / 2 - 2, cabinetY + 24, 4, 4);
     ctx.fillRect(cabinetX + cabinetW / 2 - 8, cabinetY + 31, 16, 4);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.2 + pulseFast * 0.22})`;
+    ctx.fillRect(cabinetX + 8 + pulseFast * (cabinetW - 18), cabinetY + 8, 6, 6);
   }
 
   if (hasUpgrade('neon-signage')) {
     const signX = scale.offsetX + 6.1 * TILE_SIZE * scale.zoom;
     const signY = scale.offsetY + 1.25 * TILE_SIZE * scale.zoom;
-    ctx.strokeStyle = `rgba(${palette.accent}, 0.95)`;
+    const flicker = pulseFast > 0.12 && pulseFast < 0.9;
+    ctx.strokeStyle = `rgba(${palette.accent}, ${flicker ? 0.95 : 0.42})`;
     ctx.lineWidth = 3;
     ctx.strokeRect(signX, signY, 1.8 * TILE_SIZE * scale.zoom, 0.75 * TILE_SIZE * scale.zoom);
-    ctx.fillStyle = `rgba(${palette.accent}, 0.24)`;
+    ctx.fillStyle = `rgba(${palette.accent}, ${flicker ? 0.24 : 0.08})`;
     ctx.fillRect(signX, signY, 1.8 * TILE_SIZE * scale.zoom, 0.75 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.accent}, ${flicker ? 0.08 : 0.02})`;
+    ctx.fillRect(signX + 0.3 * unit, signY + 2.9 * unit, 2.1 * unit, 0.1 * unit);
   }
 
   if (hasUpgrade('trophy-shelf')) {
@@ -1054,6 +1290,10 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(trophyX - 2, trophyY + 2, 2, 4);
     ctx.fillRect(trophyX + 7, trophyY + 2, 2, 4);
     ctx.fillRect(trophyX + 2, trophyY + 8, 3, 5);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.32 + pulseFast * 0.26})`;
+    ctx.fillRect(trophyX - 4, trophyY - 2, 2, 2);
+    ctx.fillRect(trophyX + 10, trophyY + 1, 2, 2);
+    ctx.fillRect(trophyX + 4, trophyY - 5, 2, 2);
   }
 
   if (hasUpgrade('night-shift-vending')) {
@@ -1065,9 +1305,26 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(vendorX, vendorY, vendorW, vendorH);
     ctx.fillStyle = `rgba(${palette.accent}, 0.82)`;
     ctx.fillRect(vendorX + 5, vendorY + 5, vendorW - 10, 14);
-    ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
-    ctx.fillRect(vendorX + 5, vendorY + 24, vendorW - 10, 3);
-    ctx.fillRect(vendorX + 5, vendorY + 31, vendorW - 10, 3);
+    for (let i = 0; i < 3; i += 1) {
+      const alpha = ((Math.floor(timeSeconds * 8) + i) % 3 === 0) ? 0.9 : 0.3;
+      ctx.fillStyle = `rgba(${palette.secondary}, ${alpha})`;
+      ctx.fillRect(vendorX + 5, vendorY + 24 + i * 7, vendorW - 10, 3);
+    }
+  }
+
+  if (hasUpgrade('monitor-wall')) {
+    const waveX = offsetX + (6.6 + pulseFast * 3.8) * unit;
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.1 + pulseFast * 0.12})`;
+    ctx.fillRect(waveX, offsetY + 2.18 * unit, 0.22 * unit, 0.78 * unit);
+  }
+
+  if (hasUpgrade('quantum-core')) {
+    const orbitX = offsetX + 12.55 * unit + Math.cos(timeSeconds * 2.2) * 0.62 * unit;
+    const orbitY = offsetY + 7.45 * unit + Math.sin(timeSeconds * 2.2) * 0.38 * unit;
+    ctx.fillStyle = `rgba(${palette.accent}, ${0.36 + pulseFast * 0.22})`;
+    ctx.fillRect(orbitX, orbitY, 3, 3);
+    ctx.fillStyle = `rgba(${palette.secondary}, ${0.3 + pulseSlow * 0.18})`;
+    ctx.fillRect(offsetX + 12.55 * unit - Math.cos(timeSeconds * 2.2) * 0.44 * unit, offsetY + 7.45 * unit - Math.sin(timeSeconds * 2.2) * 0.26 * unit, 2, 2);
   }
 }
 
@@ -1137,6 +1394,27 @@ function drawActors(scale, timeSeconds) {
       aura.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = aura;
       ctx.fillRect(worldX - 50, drawBottomY - 88, 100, 120);
+    }
+
+    if (actor.id === 'scout' && hasUpgrade('scout-prime')) {
+      ctx.strokeStyle = `rgba(${palette.secondary}, ${0.18 + Math.abs(Math.sin(timeSeconds * 1.9)) * 0.16})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(worldX, drawBottomY - 18 * scale.zoom, 9 * scale.zoom + Math.abs(Math.sin(timeSeconds * 1.9)) * 6 * scale.zoom, -1.2, -0.25);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(worldX, drawBottomY - 18 * scale.zoom);
+      ctx.lineTo(worldX + 15 * scale.zoom, drawBottomY - 28 * scale.zoom);
+      ctx.stroke();
+    }
+
+    if (actor.id === 'trace' && hasUpgrade('trace-plus')) {
+      ctx.strokeStyle = `rgba(${palette.accent}, ${0.18 + Math.abs(Math.sin(timeSeconds * 3.1)) * 0.18})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(worldX - 10 * scale.zoom, drawBottomY - 33 * scale.zoom, 20 * scale.zoom, 22 * scale.zoom);
+      ctx.fillStyle = `rgba(${palette.accent}, ${0.2 + Math.abs(Math.sin(timeSeconds * 4.4)) * 0.18})`;
+      ctx.fillRect(worldX - 13 * scale.zoom, drawBottomY - 22 * scale.zoom, 3, 3);
+      ctx.fillRect(worldX + 10 * scale.zoom, drawBottomY - 29 * scale.zoom, 3, 3);
     }
 
     if (actor.status === 'error') {
@@ -1385,9 +1663,18 @@ function activateTheme(themeId) {
   const nextTheme = getThemeById(themeId);
   if (!nextTheme || nextTheme.id !== themeId) return;
   if (!state.rpg?.unlockedThemes?.some((theme) => theme.id === themeId)) return;
+  const alreadyVisited = state.rpg.storage?.visitedThemeIds?.includes(themeId);
+  const xpGain = alreadyVisited
+    ? 0
+    : Math.round(55 * (1 + (state.rpg.office?.bonuses?.editXpBonus || 0)));
   state.rpgStorage = {
     ...(state.rpg?.storage || {}),
     activeThemeId: themeId,
+    visitedThemeIds: alreadyVisited
+      ? [...(state.rpg.storage?.visitedThemeIds || [])]
+      : [...new Set([...(state.rpg.storage?.visitedThemeIds || []), themeId])],
+    builderXp: Math.max(0, Number(state.rpg.storage?.builderXp || 0) + xpGain),
+    builderActions: Math.max(0, Number(state.rpg.storage?.builderActions || 0) + (alreadyVisited ? 0 : 1)),
   };
   refreshRpgState();
   persistRpgState();
@@ -1398,13 +1685,22 @@ function activateTheme(themeId) {
 function purchaseUpgrade(upgradeId) {
   if (!state.player?.ok || !upgradeId) return;
   const upgrade = getUpgradeById(upgradeId);
-  if (!upgrade || !state.rpg) return;
+  const catalogUpgrade = state.rpg?.upgradeCatalog?.find((entry) => entry.id === upgradeId);
+  if (!upgrade || !state.rpg || !catalogUpgrade) return;
   if (state.rpg.purchasedIds.includes(upgradeId)) return;
-  if (state.rpg.level < upgrade.unlockLevel || state.rpg.coins < upgrade.cost) return;
+  if (state.rpg.level < upgrade.unlockLevel || state.rpg.coins < catalogUpgrade.price) return;
+
+  const xpGain = Math.round(catalogUpgrade.builderXpReward * (1 + (state.rpg.office?.bonuses?.editXpBonus || 0)));
 
   state.rpgStorage = {
     ...(state.rpg.storage || {}),
     purchasedIds: [...state.rpg.purchasedIds, upgradeId],
+    builderXp: Math.max(0, Number(state.rpg.storage?.builderXp || 0) + xpGain),
+    builderActions: Math.max(0, Number(state.rpg.storage?.builderActions || 0) + 1),
+    purchaseCosts: {
+      ...(state.rpg.storage?.purchaseCosts || {}),
+      [upgradeId]: catalogUpgrade.price,
+    },
   };
   refreshRpgState();
   persistRpgState();
@@ -1413,26 +1709,27 @@ function purchaseUpgrade(upgradeId) {
 }
 
 function renderWalletStrip(rpg) {
+  const office = rpg.office;
   dom.playerWallet.innerHTML = `
     <div class="wallet-card wallet-card--coins">
       <span class="wallet-label">Coins</span>
       <strong>${formatCount(rpg.coins)}</strong>
-      <span class="wallet-copy">Spend them on office upgrades.</span>
+      <span class="wallet-copy">${formatCount(rpg.coinsEarned)} earned | ${formatCount(rpg.coinsSpent)} invested back into the base.</span>
     </div>
     <div class="wallet-card">
-      <span class="wallet-label">Earned</span>
-      <strong>${formatCount(rpg.coinsEarned)}</strong>
-      <span class="wallet-copy">Generated from commits, repos, followers, and level.</span>
+      <span class="wallet-label">Studio XP</span>
+      <strong>${formatCount(office.builderXp)}</strong>
+      <span class="wallet-copy">${formatCount(office.xpToNext)} XP to reach ${office.nextTier ? office.nextTier.name : 'max tier'}.</span>
     </div>
     <div class="wallet-card">
-      <span class="wallet-label">Spent</span>
-      <strong>${formatCount(rpg.coinsSpent)}</strong>
-      <span class="wallet-copy">Already invested back into the room.</span>
+      <span class="wallet-label">Office power</span>
+      <strong>${formatCount(office.power)}</strong>
+      <span class="wallet-copy">Reactive power from upgrades, themes, and service modules.</span>
     </div>
     <div class="wallet-card">
-      <span class="wallet-label">Theme</span>
-      <strong>${rpg.activeTheme.name}</strong>
-      <span class="wallet-copy">${rpg.activeTheme.mood}</span>
+      <span class="wallet-label">Builder HQ</span>
+      <strong>${office.currentTier.name}</strong>
+      <span class="wallet-copy">${office.currentExpansion.name} online | ${office.modules.filter((module) => module.unlocked).length} modules active.</span>
     </div>
   `;
 }
@@ -1455,10 +1752,18 @@ function renderTitleRoadmap(rpg) {
 }
 
 function renderLoadout(rpg) {
+  const office = rpg.office;
   dom.playerLoadout.innerHTML = [
     ['Current title', rpg.currentTitle.title, rpg.currentTitle.flavor],
+    ['Builder HQ', office.currentTier.name, office.currentTier.flavor],
     ['Scene', rpg.loadout.scene, rpg.loadout.sceneMood],
     ['Desk rig', rpg.loadout.deskRig, 'Hardware tier currently active in the office.'],
+    ['Office power', formatCount(office.power), 'Power rises with high-tier desks, modules, and stronger room expansions.'],
+    [
+      'Service modules',
+      rpg.loadout.modules.length ? rpg.loadout.modules.join(' | ') : 'Starter planner only',
+      'Persistent systems that boost build flow, discounts, and room prestige.',
+    ],
     ['Agents', rpg.loadout.agents.join(' | '), 'Roles and upgrades currently represented in the room.'],
     [
       'Office perks',
@@ -1504,8 +1809,8 @@ function renderSceneSwitcher(rpg) {
 function upgradeStatusLabel(upgrade) {
   if (upgrade.owned) return 'Owned';
   if (!upgrade.unlocked) return `Unlocks at level ${upgrade.unlockLevel}`;
-  if (!upgrade.affordable) return `Need ${formatCount(upgrade.cost)} coins`;
-  return `Buy for ${formatCount(upgrade.cost)} coins`;
+  if (!upgrade.affordable) return `Need ${formatCount(upgrade.price)} coins`;
+  return `Buy for ${formatCount(upgrade.price)} coins`;
 }
 
 function renderUpgradeShop(rpg) {
@@ -1513,9 +1818,14 @@ function renderUpgradeShop(rpg) {
     .map(
       (upgrade) => `
         <article class="upgrade-card ${upgrade.owned ? 'is-owned' : ''} ${upgrade.unlocked ? '' : 'is-locked'}">
-          <div class="upgrade-card-head">
-            <span>${menuCategoryLabel(upgrade.category)} | ${menuRarityLabel(upgrade.rarity)}</span>
-            <strong>${upgrade.name}</strong>
+          <div class="upgrade-card-top">
+            <div class="upgrade-card-art" style="--art-accent:${menuAccent(upgrade.type)}; --art-rarity:${menuRarityTone(upgrade.rarity)};">
+              ${renderUpgradeArt(upgrade.icon, 'mini')}
+            </div>
+            <div class="upgrade-card-head">
+              <span>${menuCategoryLabel(upgrade.category)} | ${menuRarityLabel(upgrade.rarity)}</span>
+              <strong>${upgrade.name}</strong>
+            </div>
           </div>
           <p>${upgrade.description}</p>
           <div class="upgrade-meta">
@@ -1539,6 +1849,74 @@ function renderUpgradeShop(rpg) {
       purchaseUpgrade(button.dataset.upgradeId);
     });
   });
+}
+
+const UPGRADE_VISUAL_TRAITS = {
+  'dual-rig': ['Dual view', 'Desk sync', 'Screen flicker'],
+  'smart-lights': ['Light sweep', 'Wall glow', 'Floor tint'],
+  'signal-router': ['Signal pulses', 'Link beams', 'Live routing'],
+  'dev-poster-pack': ['Poster shine', 'Color swap', 'Wall pop'],
+  'coffee-station': ['Steam', 'Warm corner', 'Break zone'],
+  'window-garden': ['Leaf sway', 'Pollen drift', 'Skyline life'],
+  'cable-management': ['Cable pulse', 'Clean lanes', 'Under-desk flow'],
+  'keyboard-upgrade': ['RGB wave', 'Desk line', 'Input glow'],
+  'scout-prime': ['Radar sweep', 'Scout aura', 'Watcher boost'],
+  'focus-timer': ['Blink loop', 'Sprint pulse', 'Focus beacon'],
+  'server-rack': ['LED scan', 'Ops hum', 'Rack glow'],
+  ultrawide: ['Scanline', 'Wide HUD', 'Center rig'],
+  'liquid-loop': ['Coolant flow', 'Core pulse', 'Loop tubes'],
+  'trace-plus': ['Debug sparks', 'Trace brackets', 'Verifier aura'],
+  'helper-drone': ['Hover route', 'Scan cone', 'Support bot'],
+  'holo-board': ['Grid scan', 'Glass flicker', 'HUD overlay'],
+  'mini-fridge': ['Cool blink', 'Blue hum', 'Lounge prop'],
+  'speaker-stack': ['Bass pulse', 'Wave rings', 'Room rhythm'],
+  'wall-terminal': ['Cursor blink', 'Status feed', 'Command wall'],
+  'patch-bay': ['Port chase', 'Cable route', 'Backstage vibe'],
+  'legendary-rig': ['Elite rails', 'Triple glow', 'Battle desk'],
+  'plant-lab': ['Bio shimmer', 'Leaf sway', 'Soft particles'],
+  'monitor-wall': ['Wall graphs', 'Data wave', 'Command grid'],
+  'neon-signage': ['Neon flicker', 'Floor reflection', 'Studio sign'],
+  'trophy-shelf': ['Sparkles', 'Prestige shelf', 'Win aura'],
+  'arcade-corner': ['Attract mode', 'Cabinet glow', 'Play lane'],
+  'quantum-core': ['Orbital core', 'Energy ring', 'Compute pulse'],
+  'night-vending': ['Marquee chase', 'Snack glow', '24/7 prop'],
+  'master-desk': ['Command beams', 'Deck rails', 'Master glow'],
+};
+
+const THEME_VISUAL_TRAITS = {
+  starter: ['Warm wood', 'Studio calm', 'Soft amber'],
+  signal: ['Cool monitors', 'Data focus', 'Signal blue'],
+  neon: ['Pink glow', 'Night arcade', 'City pulse'],
+  server: ['Cold ops', 'Rack energy', 'Vault steel'],
+  cloud: ['Glass air', 'Steel calm', 'Scale floor'],
+  skyforge: ['Gold detail', 'Creative suite', 'Forge glow'],
+  orbital: ['Sci-fi bay', 'Deep space', 'Command chrome'],
+  afterglow: ['Gold neon', 'Late launch', 'Luxury night'],
+};
+
+function upgradeTraitList(upgrade) {
+  return UPGRADE_VISUAL_TRAITS[upgrade.icon] || [upgrade.preview, 'Room upgrade', 'Reactive'];
+}
+
+function themeTraitList(theme) {
+  return THEME_VISUAL_TRAITS[theme.id] || ['Scene', 'Theme', 'Mood'];
+}
+
+function renderScenePreview(theme) {
+  return `
+    <div class="scene-preview scene-preview--${theme.id}">
+      <div class="scene-preview-sky"></div>
+      <div class="scene-preview-window-grid">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="scene-preview-orb"></div>
+      <div class="scene-preview-strip"></div>
+      <div class="scene-preview-floor"></div>
+      <div class="scene-preview-rug"></div>
+    </div>
+  `;
 }
 
 function menuTypeLabel(type) {
@@ -1668,7 +2046,7 @@ function renderShopSpotlight(rpg, catalog) {
           : `${owned.length}/${catalog.length} upgrades owned`;
   const heroCopy =
     state.shopFilter === 'computer'
-      ? 'This lane is where the office stops looking starter and starts looking elite.'
+      ? 'Where the office becomes elite.'
       : filter.copy;
   const rarityHeadline = nextUpgrade ? `${menuRarityLabel(nextUpgrade.rarity)} unlock path` : 'Collection completed';
   const nextLabel = nextUpgrade
@@ -1698,8 +2076,16 @@ function renderShopSpotlight(rpg, catalog) {
         <strong>${nextLabel}</strong>
       </div>
       <div class="shop-metric">
+        <span>Builder HQ</span>
+        <strong>${rpg.office.currentTier.name}</strong>
+      </div>
+      <div class="shop-metric">
+        <span>Office power</span>
+        <strong>${formatCount(rpg.office.power)}</strong>
+      </div>
+      <div class="shop-metric">
         <span>Wallet</span>
-        <strong>${formatCount(rpg.coins)} coins</strong>
+        <strong>${formatCount(rpg.coins)} coins | ${formatCount(rpg.office.builderXp)} XP</strong>
       </div>
     </div>
   `;
@@ -1707,7 +2093,7 @@ function renderShopSpotlight(rpg, catalog) {
 
 function openMenu(tab = state.menuTab) {
   closeProfile();
-  state.menuTab = MENU_TABS.includes(tab) ? tab : 'shop';
+  state.menuTab = MENU_TABS.includes(tab) ? tab : 'hq';
   dom.gameMenu.hidden = false;
   renderGameMenu();
   if (!state.player && !state.playerLoading) {
@@ -1727,11 +2113,13 @@ function setMenuTab(tab) {
 
 function renderMenuTabs() {
   const tabMap = {
+    hq: dom.menuTabHQ,
     shop: dom.menuTabShop,
     scenes: dom.menuTabScenes,
     inventory: dom.menuTabInventory,
   };
   const panelMap = {
+    hq: dom.menuPanelHQ,
     shop: dom.menuPanelShop,
     scenes: dom.menuPanelScenes,
     inventory: dom.menuPanelInventory,
@@ -1756,9 +2144,10 @@ function renderMenuShop(rpg) {
           style="--card-accent:${menuAccent(upgrade.type)}; --rarity-accent:${menuRarityTone(upgrade.rarity)};"
         >
           <div class="menu-thumb" data-icon="${upgrade.icon}" data-type="${upgrade.type}">
+            ${renderUpgradeArt(upgrade.icon, 'card')}
             <span class="menu-thumb-label">${upgrade.preview}</span>
           </div>
-          <div class="menu-card-copy">
+          <div class="menu-card-copy menu-card-copy--visual">
             <div class="menu-card-head">
               <span class="menu-card-tag">${menuTypeLabel(upgrade.type)}</span>
               <strong>${upgrade.name}</strong>
@@ -1768,12 +2157,27 @@ function renderMenuShop(rpg) {
               <span>${menuRarityLabel(upgrade.rarity)}</span>
               <span>Lv ${upgrade.unlockLevel}</span>
             </div>
-            <p>${upgrade.description}</p>
-            <div class="menu-impact">
-              ${upgrade.impact.map((item) => `<span>${item}</span>`).join('')}
+            <div class="menu-card-stats">
+              <div class="menu-mini-stat">
+                <span>XP</span>
+                <strong>+${formatCount(upgrade.builderXpReward)}</strong>
+              </div>
+              <div class="menu-mini-stat">
+                <span>Power</span>
+                <strong>+${formatCount(upgrade.officePower)}</strong>
+              </div>
+              <div class="menu-mini-stat">
+                <span>FX</span>
+                <strong>${upgradeTraitList(upgrade)[0]}</strong>
+              </div>
+            </div>
+            <div class="menu-impact menu-impact--visual">
+              ${upgradeTraitList(upgrade)
+                .map((item) => `<span>${item}</span>`)
+                .join('')}
             </div>
             <div class="menu-card-footer">
-              <span class="menu-price">${upgrade.owned ? 'Owned' : `${formatCount(upgrade.cost)} coins`}</span>
+              <span class="menu-price">${upgrade.owned ? 'Owned' : `${formatCount(upgrade.price)} coins`}</span>
               <button
                 class="menu-card-action"
                 type="button"
@@ -1806,14 +2210,19 @@ function renderMenuScenes(rpg) {
           style="--scene-wall-top:${theme.wallTop}; --scene-wall-mid:${theme.wallMid}; --scene-wall-bottom:${theme.wallBottom}; --scene-floor-a:${theme.floorA}; --scene-floor-b:${theme.floorB}; --scene-accent:rgb(${theme.accent}); --scene-secondary:rgb(${theme.secondary});"
         >
           <div class="scene-thumb">
+            ${renderScenePreview(theme)}
             <span class="scene-thumb-pill">Lv ${theme.unlockLevel}</span>
           </div>
-          <div class="menu-card-copy">
+          <div class="menu-card-copy menu-card-copy--visual">
             <div class="menu-card-head">
               <span class="menu-card-tag">Scene</span>
               <strong>${theme.name}</strong>
             </div>
-            <p>${theme.mood}</p>
+            <div class="menu-impact menu-impact--visual">
+              ${themeTraitList(theme)
+                .map((item) => `<span>${item}</span>`)
+                .join('')}
+            </div>
             <div class="menu-card-footer">
               <span class="menu-price">${rpg.unlockedThemes.some((entry) => entry.id === theme.id) ? 'Unlocked' : 'Locked'}</span>
               <button
@@ -1873,7 +2282,9 @@ function renderMenuInventory(rpg) {
         .map(
           (upgrade) => `
             <div class="inventory-chip" style="--chip-accent:${menuAccent(upgrade.type)};">
-              <span class="inventory-chip-icon" data-icon="${upgrade.icon}"></span>
+              <span class="inventory-chip-icon" data-icon="${upgrade.icon}" style="--art-accent:${menuAccent(upgrade.type)};">
+                ${renderUpgradeArt(upgrade.icon, 'chip')}
+              </span>
               <strong>${upgrade.name}</strong>
               <span>${menuTypeLabel(upgrade.type)}</span>
             </div>
@@ -1905,18 +2316,43 @@ function renderGameMenu() {
   renderMenuTabs();
 
   if (!state.player?.ok || !state.rpg) {
-    dom.menuCoinCount.textContent = '0 coins';
-    dom.menuHeroCopy.textContent = 'Link GitHub progress to unlock the full shop.';
-    dom.menuOwnedCount.textContent = '0 items';
-    dom.menuOwnedCopy.textContent = 'Starter office loadout.';
-    dom.menuThemeName.textContent = 'Starter Loft';
-    dom.menuThemeMood.textContent = 'Calm studio with warm wood and slate walls.';
+    const previewRpg = computeRpgState(
+      {
+        ok: false,
+        profile: {
+          name: 'Builder Offline',
+          login: 'local',
+          repositories: 0,
+          followers: 0,
+          following: 0,
+        },
+        progression: {
+          level: 1,
+          totalCommits: 0,
+          commitsToNextLevel: 120,
+          progress: 0.04,
+          contributionCommits: 0,
+          ownedRepoCommits: 0,
+        },
+      },
+      state.rpgStorage,
+    );
+    dom.menuCoinLabel.textContent = 'Wallet';
+    dom.menuCoinCount.textContent = `${formatCount(previewRpg.coins)} coins`;
+    dom.menuHeroCopy.textContent = 'Preview mode is live. Link GitHub progress to turn this into your real builder profile.';
+    dom.menuOwnedLabel.textContent = 'Builder HQ';
+    dom.menuOwnedCount.textContent = previewRpg.office.currentTier.name;
+    dom.menuOwnedCopy.textContent = `Lv ${previewRpg.office.level} | ${formatCount(previewRpg.office.power)} office power`;
+    dom.menuThemeLabel.textContent = 'Active scene';
+    dom.menuThemeName.textContent = previewRpg.activeTheme.name;
+    dom.menuThemeMood.textContent = 'Preview loadout for the office-builder loop.';
+    renderMenuHQ(previewRpg);
     dom.menuShopSpotlight.className = 'menu-shop-spotlight';
     dom.menuShopSpotlight.innerHTML = `
       <div class="menu-shop-spotlight-copy">
         <span class="info-kicker">Office Shop</span>
-        <h4>Waiting for player sync</h4>
-        <p>Link GitHub progress to unlock the catalog, computer lab, and prestige-tier office upgrades.</p>
+        <h4>Preview mode</h4>
+        <p>Link GitHub progress to unlock the live catalog, persistent coins, and your real builder progression.</p>
       </div>
     `;
     dom.menuShopFilters.innerHTML = '';
@@ -1929,15 +2365,17 @@ function renderGameMenu() {
 
   const rpg = state.rpg;
   const ownedCount = rpg.upgradeCatalog.filter((upgrade) => upgrade.owned).length;
+  dom.menuCoinLabel.textContent = 'Wallet';
   dom.menuCoinCount.textContent = `${formatCount(rpg.coins)} coins`;
-  dom.menuHeroCopy.textContent = `${formatCount(rpg.coinsEarned)} earned, ${formatCount(rpg.coinsSpent)} already spent.`;
-  dom.menuOwnedCount.textContent = `${ownedCount} ${ownedCount === 1 ? 'item' : 'items'}`;
-  dom.menuOwnedCopy.textContent = ownedCount
-    ? `${rpg.loadout.officePerks.slice(0, 3).join(' | ')}${ownedCount > 3 ? ' | ...' : ''}`
-    : 'Starter office loadout.';
+  dom.menuHeroCopy.textContent = `${formatCount(rpg.coinsEarned)} earned | ${formatCount(rpg.coinsSpent)} reinvested into the office.`;
+  dom.menuOwnedLabel.textContent = 'Builder HQ';
+  dom.menuOwnedCount.textContent = rpg.office.currentTier.name;
+  dom.menuOwnedCopy.textContent = `Lv ${rpg.office.level} | ${formatCount(rpg.office.power)} office power | ${ownedCount} owned upgrades`;
+  dom.menuThemeLabel.textContent = 'Active scene';
   dom.menuThemeName.textContent = rpg.activeTheme.name;
   dom.menuThemeMood.textContent = rpg.activeTheme.mood;
 
+  renderMenuHQ(rpg);
   renderMenuShop(rpg);
   renderMenuScenes(rpg);
   renderMenuInventory(rpg);
@@ -2009,6 +2447,8 @@ function renderPlayerProfile() {
     ['Following', formatCount(profile.following)],
     ['Contribution XP', formatCount(progression.contributionCommits)],
     ['Owned repo XP', formatCount(progression.ownedRepoCommits)],
+    ['Studio XP', formatCount(rpg.office.builderXp)],
+    ['Office power', formatCount(rpg.office.power)],
   ]
     .map(
       ([label, value]) => `
@@ -2043,6 +2483,183 @@ function renderPlayerProfile() {
 
   renderRecentWorkspaceList();
   renderGameMenu();
+}
+
+function renderMenuHQ(rpg) {
+  const office = rpg.office;
+  const nextTierLabel = office.nextTier ? `${office.nextTier.name} at Lv ${office.nextTier.level}` : 'Mythic cap reached';
+  const moduleMarkup = office.modules
+    .map(
+      (module) => `
+        <article class="builder-module-card ${module.unlocked ? 'is-unlocked' : 'is-locked'} ${module.maxed ? 'is-maxed' : ''}">
+          <div class="builder-module-top">
+            <div class="builder-icon-shell">
+              ${renderUpgradeArt(module.artIcon, 'chip')}
+            </div>
+            <div class="builder-module-copy">
+              <span>${module.unlocked ? `Lv ${module.level}` : `Unlock Lv ${module.unlockLevel}`}</span>
+              <strong>${module.name}</strong>
+            </div>
+          </div>
+          <p>${module.effect}</p>
+          <div class="builder-module-state">${module.maxed ? 'Maxed module' : module.unlocked ? 'Online' : 'Offline'}</div>
+        </article>
+      `,
+    )
+    .join('');
+
+  const expansionMarkup = office.expansions
+    .map(
+      (expansion) => `
+        <article class="builder-expansion-card ${expansion.current ? 'is-current' : ''} ${expansion.unlocked ? 'is-unlocked' : 'is-locked'} ${expansion.upcoming ? 'is-upcoming' : ''}">
+          <div class="builder-expansion-art">
+            ${renderUpgradeArt(expansion.artIcon, 'card')}
+          </div>
+          <div class="builder-expansion-copy">
+            <div class="builder-expansion-head">
+              <span>${expansion.unlocked ? `Unlocked at Lv ${expansion.level}` : `Unlock Lv ${expansion.level}`}</span>
+              <strong>${expansion.name}</strong>
+            </div>
+            <p>${expansion.summary}</p>
+            <div class="builder-expansion-reward">${expansion.reward}</div>
+          </div>
+        </article>
+      `,
+    )
+    .join('');
+
+  const bonusItems = [
+    {
+      label: 'Edit XP',
+      value: `+${Math.round(office.bonuses.editXpBonus * 100)}%`,
+      copy: 'Room edits and unlock actions pay more Studio XP.',
+    },
+    {
+      label: 'Fabrication',
+      value: `-${Math.round(office.bonuses.fabricationDiscount * 100)}%`,
+      copy: 'Shop discount from the fabrication lane.',
+    },
+    {
+      label: 'Power grid',
+      value: `+${Math.round(office.bonuses.officePowerBonus * 100)}%`,
+      copy: 'Extra office power routed into the room.',
+    },
+    {
+      label: 'Room slots',
+      value: `${office.bonuses.roomSlots}`,
+      copy: 'How many advanced support lanes the office can sustain.',
+    },
+    {
+      label: 'Prestige',
+      value: `+${Math.round(office.bonuses.prestigeBonus * 100)}%`,
+      copy: 'Late-game builder synergy from the Architect Core.',
+    },
+    {
+      label: 'Builder actions',
+      value: `${formatCount(office.builderActions)}`,
+      copy: 'Purchases and scene activations tracked as build progress.',
+    },
+  ]
+    .map(
+      (bonus) => `
+        <article class="builder-bonus-card">
+          <span>${bonus.label}</span>
+          <strong>${bonus.value}</strong>
+          <p>${bonus.copy}</p>
+        </article>
+      `,
+    )
+    .join('');
+
+  dom.menuBuilderGrid.innerHTML = `
+    <section class="builder-panel builder-panel--hero">
+      <div class="builder-rank-card">
+        <div class="builder-rank-art">
+          ${renderUpgradeArt(office.currentExpansion.artIcon || 'master-desk', 'card')}
+        </div>
+        <div class="builder-rank-copy">
+          <span class="info-kicker">Studio rank</span>
+          <h4>${office.currentTier.name}</h4>
+          <p>${office.currentTier.flavor}</p>
+          <div class="builder-kpi-row">
+            <div class="builder-kpi">
+              <span>Office level</span>
+              <strong>Lv ${office.level}</strong>
+            </div>
+            <div class="builder-kpi">
+              <span>Office power</span>
+              <strong>${formatCount(office.power)}</strong>
+            </div>
+            <div class="builder-kpi">
+              <span>Current wing</span>
+              <strong>${office.currentExpansion.name}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="builder-progress-card">
+        <div class="builder-progress-head">
+          <div>
+            <span class="info-kicker">Builder XP</span>
+            <h4>${formatCount(office.builderXp)} XP</h4>
+          </div>
+          <div class="builder-progress-meta">
+            <strong>${Math.round(office.progress * 100)}%</strong>
+            <span>${nextTierLabel}</span>
+          </div>
+        </div>
+        <div class="builder-progress-bar">
+          <div class="builder-progress-fill" style="width:${Math.max(6, Math.round(office.progress * 100))}%"></div>
+        </div>
+        <div class="builder-progress-foot">
+          <span>${formatCount(office.xpIntoLevel)} / ${formatCount(office.xpForLevel)} XP inside this tier</span>
+          <span>${office.nextTier ? `${formatCount(office.xpToNext)} XP to next tier` : 'Top office tier unlocked'}</span>
+        </div>
+        <div class="builder-unlock-row">
+          ${office.currentTier.unlocks.map((unlock) => `<span>${unlock}</span>`).join('')}
+        </div>
+      </div>
+    </section>
+
+    <section class="builder-panel builder-panel--bonuses">
+      <div class="builder-section-head">
+        <div>
+          <div class="info-kicker">Office systems</div>
+          <h4>Builder bonuses</h4>
+        </div>
+        <span class="menu-panel-copy">This is the part inspired by room progression loops: the office itself becomes the metagame.</span>
+      </div>
+      <div class="builder-bonus-grid">
+        ${bonusItems}
+      </div>
+    </section>
+
+    <section class="builder-panel">
+      <div class="builder-section-head">
+        <div>
+          <div class="info-kicker">Service room</div>
+          <h4>Support modules</h4>
+        </div>
+        <span class="menu-panel-copy">Persistent systems that make the room stronger, cheaper, and more elite over time.</span>
+      </div>
+      <div class="builder-module-grid">
+        ${moduleMarkup}
+      </div>
+    </section>
+
+    <section class="builder-panel">
+      <div class="builder-section-head">
+        <div>
+          <div class="info-kicker">Base growth</div>
+          <h4>Room expansions</h4>
+        </div>
+        <span class="menu-panel-copy">Each milestone opens a new office lane and changes how the endgame room feels.</span>
+      </div>
+      <div class="builder-expansion-grid">
+        ${expansionMarkup}
+      </div>
+    </section>
+  `;
 }
 
 function renderRecentProjects(projects) {
@@ -2124,11 +2741,12 @@ dom.latestButton.addEventListener('click', () => {
 });
 
 dom.menuButton.addEventListener('click', () => {
-  openMenu('shop');
+  openMenu('hq');
 });
 
 dom.menuClose.addEventListener('click', closeMenu);
 dom.gameMenuBackdrop.addEventListener('click', closeMenu);
+dom.menuTabHQ.addEventListener('click', () => setMenuTab('hq'));
 dom.menuTabShop.addEventListener('click', () => setMenuTab('shop'));
 dom.menuTabScenes.addEventListener('click', () => setMenuTab('scenes'));
 dom.menuTabInventory.addEventListener('click', () => setMenuTab('inventory'));
@@ -2163,7 +2781,7 @@ dom.stage.addEventListener('click', (event) => {
 
 window.addEventListener('keydown', (event) => {
   if (event.key.toLowerCase() === 'm') {
-    if (dom.gameMenu.hidden) openMenu('shop');
+    if (dom.gameMenu.hidden) openMenu('hq');
     else closeMenu();
   }
 
@@ -2205,4 +2823,3 @@ if (document.fonts?.ready) {
 connectSocket();
 resizeCanvas();
 requestAnimationFrame(renderScene);
-

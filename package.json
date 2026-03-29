@@ -5,6 +5,8 @@
   "type": "module",
   "main": "server/index.js",
   "scripts": {
+    "game": "powershell -ExecutionPolicy Bypass -File ./scripts/start-game.ps1",
+    "game:nobrowser": "powershell -ExecutionPolicy Bypass -File ./scripts/start-game.ps1 -NoBrowser",
     "dev": "node server/index.js",
     "start": "node server/index.js"
   },
