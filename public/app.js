@@ -99,6 +99,25 @@ const dom = {
   playerLevelMini: document.getElementById('playerLevelMini'),
   playerCommitMini: document.getElementById('playerCommitMini'),
   playerCoinMini: document.getElementById('playerCoinMini'),
+  menuButton: document.getElementById('menuButton'),
+  gameMenu: document.getElementById('gameMenu'),
+  gameMenuBackdrop: document.getElementById('gameMenuBackdrop'),
+  menuClose: document.getElementById('menuClose'),
+  menuTabShop: document.getElementById('menuTabShop'),
+  menuTabScenes: document.getElementById('menuTabScenes'),
+  menuTabInventory: document.getElementById('menuTabInventory'),
+  menuPanelShop: document.getElementById('menuPanelShop'),
+  menuPanelScenes: document.getElementById('menuPanelScenes'),
+  menuPanelInventory: document.getElementById('menuPanelInventory'),
+  menuCoinCount: document.getElementById('menuCoinCount'),
+  menuHeroCopy: document.getElementById('menuHeroCopy'),
+  menuOwnedCount: document.getElementById('menuOwnedCount'),
+  menuOwnedCopy: document.getElementById('menuOwnedCopy'),
+  menuThemeName: document.getElementById('menuThemeName'),
+  menuThemeMood: document.getElementById('menuThemeMood'),
+  menuShopGrid: document.getElementById('menuShopGrid'),
+  menuSceneGrid: document.getElementById('menuSceneGrid'),
+  menuInventoryGrid: document.getElementById('menuInventoryGrid'),
   profileModal: document.getElementById('profileModal'),
   profileBackdrop: document.getElementById('profileBackdrop'),
   profileClose: document.getElementById('profileClose'),
@@ -138,9 +157,12 @@ const state = {
   rpgStorage: loadStoredRpgState(),
   playerLoading: false,
   lastPlayerWorkspace: '',
+  menuTab: 'shop',
   inputDirty: false,
   lastFrameAt: performance.now(),
 };
+
+const MENU_TABS = ['shop', 'scenes', 'inventory'];
 
 function safeJsonParse(input, fallback = null) {
   try {
@@ -660,6 +682,14 @@ function drawFurniture(scale, timeSeconds) {
     dynamicItems.push({ image: 'plant', col: 17, row: 8 }, { image: 'plant', col: 20, row: 7 });
   }
 
+  if (hasUpgrade('plant-lab')) {
+    dynamicItems.push(
+      { image: 'hangingPlant', col: 9, row: 1 },
+      { image: 'hangingPlant', col: 19, row: 1 },
+      { image: 'plant', col: 18, row: 8 },
+    );
+  }
+
   const items = dynamicItems
     .map((item) => {
       const image = state.images.get(item.image);
@@ -702,6 +732,59 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(scale.offsetX + 12.9 * TILE_SIZE * scale.zoom, scale.offsetY + 0.7 * TILE_SIZE * scale.zoom, 8.2 * TILE_SIZE * scale.zoom, 0.28 * TILE_SIZE * scale.zoom);
   }
 
+  if (hasUpgrade('signal-router')) {
+    const routerX = scale.offsetX + 11.1 * TILE_SIZE * scale.zoom;
+    const routerY = scale.offsetY + 1.05 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = 'rgba(13, 18, 28, 0.9)';
+    ctx.fillRect(routerX, routerY, 18, 10);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.85)`;
+    ctx.fillRect(routerX + 4, routerY + 3, 10, 2);
+    ctx.fillRect(routerX + 7, routerY - 6, 2, 6);
+    ctx.fillRect(routerX + 13, routerY - 4, 2, 4);
+  }
+
+  if (hasUpgrade('dev-poster-pack')) {
+    ctx.fillStyle = 'rgba(255, 145, 123, 0.72)';
+    ctx.fillRect(scale.offsetX + 2.9 * TILE_SIZE * scale.zoom, scale.offsetY + 1.4 * TILE_SIZE * scale.zoom, 0.8 * TILE_SIZE * scale.zoom, 1.1 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.78)`;
+    ctx.fillRect(scale.offsetX + 4.1 * TILE_SIZE * scale.zoom, scale.offsetY + 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom, 1.25 * TILE_SIZE * scale.zoom);
+  }
+
+  if (hasUpgrade('coffee-station')) {
+    const stationX = scale.offsetX + 4.25 * TILE_SIZE * scale.zoom;
+    const stationY = scale.offsetY + 8.55 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = 'rgba(15, 12, 10, 0.92)';
+    ctx.fillRect(stationX, stationY, 12, 14);
+    ctx.fillStyle = `rgba(${palette.accent}, 0.82)`;
+    ctx.fillRect(stationX + 2, stationY + 2, 8, 4);
+    ctx.fillStyle = '#f8edd1';
+    ctx.fillRect(stationX + 14, stationY + 7, 5, 5);
+  }
+
+  if (hasUpgrade('cable-management')) {
+    ctx.strokeStyle = 'rgba(90, 105, 132, 0.65)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(scale.offsetX + 8.8 * TILE_SIZE * scale.zoom, scale.offsetY + 7.8 * TILE_SIZE * scale.zoom);
+    ctx.lineTo(scale.offsetX + 8.8 * TILE_SIZE * scale.zoom, scale.offsetY + 9.1 * TILE_SIZE * scale.zoom);
+    ctx.lineTo(scale.offsetX + 9.7 * TILE_SIZE * scale.zoom, scale.offsetY + 9.1 * TILE_SIZE * scale.zoom);
+    ctx.stroke();
+  }
+
+  if (hasUpgrade('keyboard-upgrade')) {
+    ctx.fillStyle = `rgba(${palette.accent}, 0.76)`;
+    ctx.fillRect(scale.offsetX + 8.55 * TILE_SIZE * scale.zoom, scale.offsetY + 6.86 * TILE_SIZE * scale.zoom, 0.72 * TILE_SIZE * scale.zoom, 0.12 * TILE_SIZE * scale.zoom);
+  }
+
+  if (hasUpgrade('focus-timer')) {
+    const timerX = scale.offsetX + 20.1 * TILE_SIZE * scale.zoom;
+    const timerY = scale.offsetY + 2.7 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = 'rgba(10, 14, 20, 0.92)';
+    ctx.fillRect(timerX, timerY, 22, 12);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.85)`;
+    ctx.fillRect(timerX + 4, timerY + 4, 14, 4);
+  }
+
   if (hasUpgrade('server-rack')) {
     const rackX = scale.offsetX + 18.9 * TILE_SIZE * scale.zoom;
     const rackY = scale.offsetY + 6.05 * TILE_SIZE * scale.zoom;
@@ -733,6 +816,47 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillRect(holoX + 8, holoY + holoH / 2 - 2, holoW - 16, 4);
   }
 
+  if (hasUpgrade('mini-fridge')) {
+    const fridgeX = scale.offsetX + 0.95 * TILE_SIZE * scale.zoom;
+    const fridgeY = scale.offsetY + 9.2 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = '#d7dde5';
+    ctx.fillRect(fridgeX, fridgeY, 0.9 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = '#a7b4c7';
+    ctx.fillRect(fridgeX + 3, fridgeY + 8, 0.9 * TILE_SIZE * scale.zoom - 6, 2);
+  }
+
+  if (hasUpgrade('ambient-speakers')) {
+    const speakerY = scale.offsetY + 5.55 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = '#171a24';
+    ctx.fillRect(scale.offsetX + 7.45 * TILE_SIZE * scale.zoom, speakerY, 10, 18);
+    ctx.fillRect(scale.offsetX + 10.15 * TILE_SIZE * scale.zoom, speakerY, 10, 18);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.7)`;
+    ctx.fillRect(scale.offsetX + 7.95 * TILE_SIZE * scale.zoom, speakerY + 4, 6, 6);
+    ctx.fillRect(scale.offsetX + 10.65 * TILE_SIZE * scale.zoom, speakerY + 4, 6, 6);
+  }
+
+  if (hasUpgrade('wall-terminal')) {
+    const terminalX = scale.offsetX + 17.2 * TILE_SIZE * scale.zoom;
+    const terminalY = scale.offsetY + 2.25 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = 'rgba(13, 18, 28, 0.95)';
+    ctx.fillRect(terminalX, terminalY, 1.35 * TILE_SIZE * scale.zoom, 0.82 * TILE_SIZE * scale.zoom);
+    ctx.strokeStyle = `rgba(${palette.secondary}, 0.4)`;
+    ctx.strokeRect(terminalX, terminalY, 1.35 * TILE_SIZE * scale.zoom, 0.82 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.75)`;
+    ctx.fillRect(terminalX + 6, terminalY + 5, 0.75 * TILE_SIZE * scale.zoom, 4);
+  }
+
+  if (hasUpgrade('patch-bay')) {
+    const bayX = scale.offsetX + 18.92 * TILE_SIZE * scale.zoom;
+    const bayY = scale.offsetY + 9.08 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = '#171b27';
+    ctx.fillRect(bayX, bayY, 1.75 * TILE_SIZE * scale.zoom, 0.55 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
+    for (let i = 0; i < 5; i += 1) {
+      ctx.fillRect(bayX + 6 + i * 7, bayY + 4, 3, 3);
+    }
+  }
+
   if (hasUpgrade('helper-drone')) {
     const droneX = scale.offsetX + 17.2 * TILE_SIZE * scale.zoom + Math.sin(timeSeconds * 1.8) * 10;
     const droneY = scale.offsetY + 4.4 * TILE_SIZE * scale.zoom + Math.cos(timeSeconds * 2.1) * 6;
@@ -755,6 +879,40 @@ function drawOfficeUpgrades(scale, timeSeconds, palette) {
     ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
     ctx.fillRect(cabinetX + cabinetW / 2 - 2, cabinetY + 24, 4, 4);
     ctx.fillRect(cabinetX + cabinetW / 2 - 8, cabinetY + 31, 16, 4);
+  }
+
+  if (hasUpgrade('neon-signage')) {
+    const signX = scale.offsetX + 6.1 * TILE_SIZE * scale.zoom;
+    const signY = scale.offsetY + 1.25 * TILE_SIZE * scale.zoom;
+    ctx.strokeStyle = `rgba(${palette.accent}, 0.95)`;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(signX, signY, 1.8 * TILE_SIZE * scale.zoom, 0.75 * TILE_SIZE * scale.zoom);
+    ctx.fillStyle = `rgba(${palette.accent}, 0.24)`;
+    ctx.fillRect(signX, signY, 1.8 * TILE_SIZE * scale.zoom, 0.75 * TILE_SIZE * scale.zoom);
+  }
+
+  if (hasUpgrade('trophy-shelf')) {
+    const trophyX = scale.offsetX + 18.55 * TILE_SIZE * scale.zoom;
+    const trophyY = scale.offsetY + 1.18 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = `rgba(${palette.accent}, 0.92)`;
+    ctx.fillRect(trophyX, trophyY, 7, 8);
+    ctx.fillRect(trophyX - 2, trophyY + 2, 2, 4);
+    ctx.fillRect(trophyX + 7, trophyY + 2, 2, 4);
+    ctx.fillRect(trophyX + 2, trophyY + 8, 3, 5);
+  }
+
+  if (hasUpgrade('night-shift-vending')) {
+    const vendorX = scale.offsetX + 0.85 * TILE_SIZE * scale.zoom;
+    const vendorY = scale.offsetY + 6.55 * TILE_SIZE * scale.zoom;
+    const vendorW = 1.15 * TILE_SIZE * scale.zoom;
+    const vendorH = 2.45 * TILE_SIZE * scale.zoom;
+    ctx.fillStyle = '#111521';
+    ctx.fillRect(vendorX, vendorY, vendorW, vendorH);
+    ctx.fillStyle = `rgba(${palette.accent}, 0.82)`;
+    ctx.fillRect(vendorX + 5, vendorY + 5, vendorW - 10, 14);
+    ctx.fillStyle = `rgba(${palette.secondary}, 0.8)`;
+    ctx.fillRect(vendorX + 5, vendorY + 24, vendorW - 10, 3);
+    ctx.fillRect(vendorX + 5, vendorY + 31, vendorW - 10, 3);
   }
 }
 
@@ -997,6 +1155,7 @@ function setAvatarImage(element, url) {
 }
 
 function openProfile(actorId = 'codex') {
+  closeMenu();
   state.selectedActorId = actorId;
   dom.profileModal.hidden = false;
   renderPlayerProfile();
@@ -1078,6 +1237,7 @@ function activateTheme(themeId) {
   refreshRpgState();
   persistRpgState();
   renderPlayerProfile();
+  renderGameMenu();
 }
 
 function purchaseUpgrade(upgradeId) {
@@ -1094,6 +1254,7 @@ function purchaseUpgrade(upgradeId) {
   refreshRpgState();
   persistRpgState();
   renderPlayerProfile();
+  renderGameMenu();
 }
 
 function renderWalletStrip(rpg) {
@@ -1225,6 +1386,265 @@ function renderUpgradeShop(rpg) {
   });
 }
 
+function menuTypeLabel(type) {
+  const labels = {
+    rig: 'Desk rig',
+    ambient: 'Ambient',
+    ops: 'Ops',
+    decor: 'Decor',
+    comfort: 'Comfort',
+    agent: 'Agent',
+    assistant: 'Assistant',
+    display: 'Display',
+    audio: 'Audio',
+  };
+  return labels[type] || 'Upgrade';
+}
+
+function menuAccent(type) {
+  const accents = {
+    rig: '#ffcb79',
+    ambient: '#8ff3cf',
+    ops: '#88b7ff',
+    decor: '#f7c9ae',
+    comfort: '#ffdf9c',
+    agent: '#f7b4d8',
+    assistant: '#8ff3cf',
+    display: '#93f0ff',
+    audio: '#d6b3ff',
+  };
+  return accents[type] || '#ffcb79';
+}
+
+function menuShopButtonLabel(upgrade) {
+  if (upgrade.owned) return 'Owned';
+  if (!upgrade.unlocked) return `Level ${upgrade.unlockLevel}`;
+  if (!upgrade.affordable) return 'Save coins';
+  return 'Buy now';
+}
+
+function menuThemeButtonLabel(theme, rpg) {
+  if (rpg.activeThemeId === theme.id) return 'Equipped';
+  if (rpg.unlockedThemes.some((entry) => entry.id === theme.id)) return 'Equip';
+  return `Unlock Lv ${theme.unlockLevel}`;
+}
+
+function openMenu(tab = state.menuTab) {
+  closeProfile();
+  state.menuTab = MENU_TABS.includes(tab) ? tab : 'shop';
+  dom.gameMenu.hidden = false;
+  renderGameMenu();
+  if (!state.player && !state.playerLoading) {
+    loadPlayerProfile();
+  }
+}
+
+function closeMenu() {
+  dom.gameMenu.hidden = true;
+}
+
+function setMenuTab(tab) {
+  if (!MENU_TABS.includes(tab)) return;
+  state.menuTab = tab;
+  renderGameMenu();
+}
+
+function renderMenuTabs() {
+  const tabMap = {
+    shop: dom.menuTabShop,
+    scenes: dom.menuTabScenes,
+    inventory: dom.menuTabInventory,
+  };
+  const panelMap = {
+    shop: dom.menuPanelShop,
+    scenes: dom.menuPanelScenes,
+    inventory: dom.menuPanelInventory,
+  };
+
+  for (const tab of MENU_TABS) {
+    tabMap[tab].classList.toggle('is-active', state.menuTab === tab);
+    panelMap[tab].classList.toggle('is-active', state.menuTab === tab);
+  }
+}
+
+function renderMenuShop(rpg) {
+  dom.menuShopGrid.innerHTML = rpg.upgradeCatalog
+    .map(
+      (upgrade) => `
+        <article class="menu-card menu-card--shop ${upgrade.owned ? 'is-owned' : ''} ${upgrade.unlocked ? '' : 'is-locked'}" style="--card-accent:${menuAccent(upgrade.type)};">
+          <div class="menu-thumb" data-icon="${upgrade.icon}" data-type="${upgrade.type}">
+            <span class="menu-thumb-label">${upgrade.preview}</span>
+          </div>
+          <div class="menu-card-copy">
+            <div class="menu-card-head">
+              <span class="menu-card-tag">${menuTypeLabel(upgrade.type)}</span>
+              <strong>${upgrade.name}</strong>
+            </div>
+            <p>${upgrade.description}</p>
+            <div class="menu-impact">
+              ${upgrade.impact.map((item) => `<span>${item}</span>`).join('')}
+            </div>
+            <div class="menu-card-footer">
+              <span class="menu-price">${upgrade.owned ? 'Owned' : `${formatCount(upgrade.cost)} coins`}</span>
+              <button
+                class="menu-card-action"
+                type="button"
+                data-upgrade-id="${upgrade.id}"
+                ${upgrade.owned || !upgrade.unlocked || !upgrade.affordable ? 'disabled' : ''}
+              >
+                ${menuShopButtonLabel(upgrade)}
+              </button>
+            </div>
+          </div>
+        </article>
+      `,
+    )
+    .join('');
+
+  dom.menuShopGrid.querySelectorAll('[data-upgrade-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      purchaseUpgrade(button.dataset.upgradeId);
+    });
+  });
+}
+
+function renderMenuScenes(rpg) {
+  const allThemes = Object.values(THEME_DEFS).sort((left, right) => left.unlockLevel - right.unlockLevel);
+  dom.menuSceneGrid.innerHTML = allThemes
+    .map(
+      (theme) => `
+        <article
+          class="menu-card menu-card--scene ${rpg.activeThemeId === theme.id ? 'is-active' : ''} ${rpg.unlockedThemes.some((entry) => entry.id === theme.id) ? '' : 'is-locked'}"
+          style="--scene-wall-top:${theme.wallTop}; --scene-wall-mid:${theme.wallMid}; --scene-wall-bottom:${theme.wallBottom}; --scene-floor-a:${theme.floorA}; --scene-floor-b:${theme.floorB}; --scene-accent:rgb(${theme.accent}); --scene-secondary:rgb(${theme.secondary});"
+        >
+          <div class="scene-thumb">
+            <span class="scene-thumb-pill">Lv ${theme.unlockLevel}</span>
+          </div>
+          <div class="menu-card-copy">
+            <div class="menu-card-head">
+              <span class="menu-card-tag">Scene</span>
+              <strong>${theme.name}</strong>
+            </div>
+            <p>${theme.mood}</p>
+            <div class="menu-card-footer">
+              <span class="menu-price">${rpg.unlockedThemes.some((entry) => entry.id === theme.id) ? 'Unlocked' : 'Locked'}</span>
+              <button
+                class="menu-card-action"
+                type="button"
+                data-theme-id="${theme.id}"
+                ${rpg.unlockedThemes.some((entry) => entry.id === theme.id) ? '' : 'disabled'}
+              >
+                ${menuThemeButtonLabel(theme, rpg)}
+              </button>
+            </div>
+          </div>
+        </article>
+      `,
+    )
+    .join('');
+
+  dom.menuSceneGrid.querySelectorAll('[data-theme-id]').forEach((button) => {
+    button.addEventListener('click', () => {
+      activateTheme(button.dataset.themeId);
+    });
+  });
+}
+
+function renderMenuInventory(rpg) {
+  const ownedUpgrades = rpg.upgradeCatalog.filter((upgrade) => upgrade.owned);
+  const inventoryHighlights = [
+    {
+      label: 'Current title',
+      value: rpg.currentTitle.title,
+      copy: rpg.currentTitle.flavor,
+    },
+    {
+      label: 'Equipped scene',
+      value: rpg.activeTheme.name,
+      copy: rpg.activeTheme.mood,
+    },
+    {
+      label: 'Main rig',
+      value: rpg.loadout.deskRig,
+      copy: 'Hardware tier currently active in the room.',
+    },
+    {
+      label: 'Active agents',
+      value: rpg.loadout.agents.join(' | '),
+      copy: 'Specialists currently represented inside the office.',
+    },
+    {
+      label: 'Next title',
+      value: rpg.nextTitle ? `${rpg.nextTitle.title} at level ${rpg.nextTitle.level}` : 'All title tiers unlocked',
+      copy: rpg.nextTitle ? rpg.nextTitle.flavor : 'You reached the current title cap.',
+    },
+  ];
+
+  const ownedMarkup = ownedUpgrades.length
+    ? ownedUpgrades
+        .map(
+          (upgrade) => `
+            <div class="inventory-chip" style="--chip-accent:${menuAccent(upgrade.type)};">
+              <span class="inventory-chip-icon" data-icon="${upgrade.icon}"></span>
+              <strong>${upgrade.name}</strong>
+              <span>${menuTypeLabel(upgrade.type)}</span>
+            </div>
+          `,
+        )
+        .join('')
+    : '<div class="profile-empty">No purchased upgrades yet. Start with the shop tab.</div>';
+
+  dom.menuInventoryGrid.innerHTML = `
+    ${inventoryHighlights
+      .map(
+        (item) => `
+          <article class="inventory-card">
+            <span class="loadout-label">${item.label}</span>
+            <strong>${item.value}</strong>
+            <p>${item.copy}</p>
+          </article>
+        `,
+      )
+      .join('')}
+    <article class="inventory-card inventory-card--wide">
+      <span class="loadout-label">Owned upgrades</span>
+      <div class="inventory-chip-grid">${ownedMarkup}</div>
+    </article>
+  `;
+}
+
+function renderGameMenu() {
+  renderMenuTabs();
+
+  if (!state.player?.ok || !state.rpg) {
+    dom.menuCoinCount.textContent = '0 coins';
+    dom.menuHeroCopy.textContent = 'Link GitHub progress to unlock the full shop.';
+    dom.menuOwnedCount.textContent = '0 items';
+    dom.menuOwnedCopy.textContent = 'Starter office loadout.';
+    dom.menuThemeName.textContent = 'Starter Loft';
+    dom.menuThemeMood.textContent = 'Calm studio with warm wood and slate walls.';
+    dom.menuShopGrid.innerHTML = '<div class="profile-empty">The shop will unlock after the player profile loads.</div>';
+    dom.menuSceneGrid.innerHTML = '<div class="profile-empty">Scene previews appear after progression data is available.</div>';
+    dom.menuInventoryGrid.innerHTML = '<div class="profile-empty">Inventory appears after the player sync finishes.</div>';
+    return;
+  }
+
+  const rpg = state.rpg;
+  const ownedCount = rpg.upgradeCatalog.filter((upgrade) => upgrade.owned).length;
+  dom.menuCoinCount.textContent = `${formatCount(rpg.coins)} coins`;
+  dom.menuHeroCopy.textContent = `${formatCount(rpg.coinsEarned)} earned, ${formatCount(rpg.coinsSpent)} already spent.`;
+  dom.menuOwnedCount.textContent = `${ownedCount} ${ownedCount === 1 ? 'item' : 'items'}`;
+  dom.menuOwnedCopy.textContent = ownedCount
+    ? `${rpg.loadout.officePerks.slice(0, 3).join(' | ')}${ownedCount > 3 ? ' | ...' : ''}`
+    : 'Starter office loadout.';
+  dom.menuThemeName.textContent = rpg.activeTheme.name;
+  dom.menuThemeMood.textContent = rpg.activeTheme.mood;
+
+  renderMenuShop(rpg);
+  renderMenuScenes(rpg);
+  renderMenuInventory(rpg);
+}
+
 function renderPlayerProfile() {
   const player = state.player;
   const actorId = state.selectedActorId || 'codex';
@@ -1254,6 +1674,7 @@ function renderPlayerProfile() {
     dom.upgradeShop.innerHTML = '<div class="profile-empty">Upgrade shop will appear once coins are available.</div>';
     dom.playerProjects.innerHTML = '<div class="profile-empty">No GitHub projects available.</div>';
     renderRecentWorkspaceList();
+    renderGameMenu();
     return;
   }
 
@@ -1323,6 +1744,7 @@ function renderPlayerProfile() {
   }
 
   renderRecentWorkspaceList();
+  renderGameMenu();
 }
 
 function renderRecentProjects(projects) {
@@ -1403,6 +1825,16 @@ dom.latestButton.addEventListener('click', () => {
   sendConnect('');
 });
 
+dom.menuButton.addEventListener('click', () => {
+  openMenu('shop');
+});
+
+dom.menuClose.addEventListener('click', closeMenu);
+dom.gameMenuBackdrop.addEventListener('click', closeMenu);
+dom.menuTabShop.addEventListener('click', () => setMenuTab('shop'));
+dom.menuTabScenes.addEventListener('click', () => setMenuTab('scenes'));
+dom.menuTabInventory.addEventListener('click', () => setMenuTab('inventory'));
+
 dom.playerGlance.addEventListener('click', () => {
   openProfile('codex');
 });
@@ -1432,8 +1864,14 @@ dom.stage.addEventListener('click', (event) => {
 });
 
 window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && !dom.profileModal.hidden) {
-    closeProfile();
+  if (event.key.toLowerCase() === 'm') {
+    if (dom.gameMenu.hidden) openMenu('shop');
+    else closeMenu();
+  }
+
+  if (event.key === 'Escape') {
+    if (!dom.profileModal.hidden) closeProfile();
+    if (!dom.gameMenu.hidden) closeMenu();
   }
 });
 

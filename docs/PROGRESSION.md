@@ -71,23 +71,40 @@ Coins should let players decide what their office becomes.
 ### Scene unlocks
 
 - Level 1: `Starter Loft`
+- Level 3: `Signal Hub`
 - Level 5: `Neon Loft`
 - Level 7: `Server Vault`
+- Level 9: `Cloud Deck`
 - Level 12: `Sky Forge`
 - Level 15: `Orbital Bay`
+- Level 18: `Afterglow Deck`
 
 ### Office upgrades
 
 - `Dual Rig`
 - `Smart Lights`
+- `Signal Router`
+- `Dev Poster Pack`
+- `Coffee Station`
 - `Window Garden`
+- `Cable Management`
+- `Mechanical Keyboard`
 - `Scout Prime`
+- `Focus Timer`
 - `Trace Plus`
 - `Server Rack`
 - `Helper Drone`
 - `Holo Board`
+- `Mini Fridge`
+- `Ambient Speakers`
+- `Wall Terminal`
+- `Patch Bay`
 - `Legendary Rig`
+- `Plant Lab`
+- `Neon Signage`
 - `Arcade Corner`
+- `Trophy Shelf`
+- `Night Shift Vending`
 
 ## Future extensions
 

@@ -73,6 +73,7 @@ The intended long-term loop is:
 - agent bubbles with role-aware status text
 - bottom rail with activity, tool, debug, git, and feed summaries
 - GitHub-backed player profile and commit-based level
+- discrete in-game menu with shop, scenes, and inventory
 - interactive character click targets with profile modal
 - reactive room lighting, richer idle motion, and visual status effects
 - unlockable themes, coins, office upgrades, and character-facing progression UI

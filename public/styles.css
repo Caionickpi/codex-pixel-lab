@@ -183,6 +183,67 @@ body::after {
   border: 1px solid rgba(255, 205, 128, 0.08);
 }
 
+.menu-fab {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(7, 11, 18, 0.72);
+  color: var(--text);
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  transition:
+    transform 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
+}
+
+.menu-fab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 121, 0.24);
+  background: rgba(10, 15, 24, 0.88);
+}
+
+.menu-fab-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 203, 121, 0.24);
+  background: rgba(255, 203, 121, 0.08);
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+}
+
+.menu-fab-copy {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+}
+
+.menu-fab-copy strong {
+  font-size: 0.8rem;
+}
+
+.menu-fab-copy span:last-child {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
 .stage-frame {
   position: relative;
   width: min(100%, calc((100svh - 360px) * 22 / 13));
@@ -533,6 +594,607 @@ body::after {
   gap: 8px;
   align-items: center;
   min-height: 40px;
+}
+
+.game-menu[hidden] {
+  display: none;
+}
+
+.game-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+}
+
+.game-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 6, 12, 0.68);
+  backdrop-filter: blur(12px);
+}
+
+.game-menu-sheet {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  bottom: 22px;
+  width: min(980px, calc(100vw - 44px));
+  padding: 22px 18px 18px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at 18% 14%, rgba(255, 203, 121, 0.08), transparent 20%),
+    radial-gradient(circle at 88% 14%, rgba(143, 243, 207, 0.08), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(7, 11, 18, 0.9);
+  box-shadow: var(--shadow);
+}
+
+.game-menu-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+}
+
+.game-menu-header h2 {
+  margin: 8px 0 4px;
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 0.98;
+}
+
+.game-menu-header p,
+.menu-panel-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.game-menu-close,
+.menu-card-action {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  cursor: pointer;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.game-menu-close {
+  padding: 11px 14px;
+}
+
+.game-menu-topline {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.menu-hero-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-hero-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: rgba(255, 203, 121, 0.7);
+}
+
+.menu-hero-card strong {
+  font-size: 1rem;
+}
+
+.menu-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.menu-tab {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  padding: 11px 14px;
+  cursor: pointer;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.menu-tab:hover {
+  transform: translateY(-1px);
+  color: var(--text);
+}
+
+.menu-tab.is-active {
+  color: var(--text);
+  border-color: rgba(255, 203, 121, 0.24);
+  background: rgba(255, 203, 121, 0.08);
+}
+
+.menu-panel {
+  display: none;
+  margin-top: 18px;
+}
+
+.menu-panel.is-active {
+  display: block;
+}
+
+.menu-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 12px;
+}
+
+.menu-panel-head h3 {
+  margin: 6px 0 0;
+  font-size: 1rem;
+}
+
+.menu-card-grid,
+.menu-inventory-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.menu-card-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.menu-card {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.menu-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: color-mix(in srgb, var(--card-accent, #ffcb79) 72%, white 8%);
+}
+
+.menu-card.is-owned {
+  border-color: rgba(143, 243, 207, 0.24);
+}
+
+.menu-card.is-locked {
+  opacity: 0.7;
+}
+
+.menu-card-copy {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.menu-card-head {
+  display: grid;
+  gap: 4px;
+}
+
+.menu-card-head strong {
+  font-size: 0.96rem;
+}
+
+.menu-card-tag,
+.menu-price,
+.inventory-chip span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-card-copy p,
+.inventory-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-impact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.menu-impact span {
+  padding: 5px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--muted);
+  font-size: 0.66rem;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-card-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.menu-card-action {
+  padding: 9px 11px;
+  font-size: 0.68rem;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.menu-card-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(255, 203, 121, 0.24);
+  background: rgba(255, 203, 121, 0.08);
+}
+
+.menu-card-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.menu-thumb,
+.scene-thumb {
+  position: relative;
+  min-height: 122px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.menu-thumb {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.015), rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 8px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01)),
+    linear-gradient(180deg, rgba(10, 16, 28, 0.8), rgba(6, 10, 18, 0.98));
+}
+
+.menu-thumb::before,
+.menu-thumb::after,
+.inventory-chip-icon::before,
+.inventory-chip-icon::after {
+  content: '';
+  position: absolute;
+}
+
+.menu-thumb::before {
+  left: 22px;
+  right: 22px;
+  bottom: 18px;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-thumb::after {
+  left: 24px;
+  top: 24px;
+  width: 74px;
+  height: 44px;
+  border: 2px solid color-mix(in srgb, var(--card-accent) 62%, white 8%);
+  background: color-mix(in srgb, var(--card-accent) 14%, rgba(8, 12, 22, 0.92));
+  box-shadow:
+    0 0 0 4px rgba(0, 0, 0, 0.16),
+    0 0 18px color-mix(in srgb, var(--card-accent) 18%, transparent);
+}
+
+.menu-thumb-label {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 12, 20, 0.82);
+  color: var(--text);
+  font-size: 0.66rem;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-thumb[data-icon='light']::before {
+  left: 18px;
+  right: 18px;
+  top: 16px;
+  bottom: auto;
+  height: 5px;
+  background: color-mix(in srgb, var(--card-accent) 70%, white 10%);
+}
+
+.menu-thumb[data-icon='signal']::after {
+  width: 16px;
+  height: 54px;
+  left: 55px;
+  top: 22px;
+}
+
+.menu-thumb[data-icon='signal'] .menu-thumb-label::before {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: -34px;
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  border-right: 2px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  transform: rotate(-45deg);
+}
+
+.menu-thumb[data-icon='poster']::after {
+  width: 38px;
+  height: 52px;
+  left: 28px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='coffee']::after {
+  width: 28px;
+  height: 24px;
+  left: 40px;
+  top: 42px;
+}
+
+.menu-thumb[data-icon='coffee']::before {
+  left: 68px;
+  top: 44px;
+  width: 10px;
+  height: 12px;
+  border: 2px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  border-left: none;
+  background: transparent;
+}
+
+.menu-thumb[data-icon='plant']::after {
+  width: 18px;
+  height: 58px;
+  left: 52px;
+  top: 18px;
+  border-radius: 40px;
+}
+
+.menu-thumb[data-icon='cable']::after {
+  width: 72px;
+  height: 36px;
+  left: 24px;
+  top: 42px;
+  border-left: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  border-bottom: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  background: transparent;
+}
+
+.menu-thumb[data-icon='keyboard']::after {
+  width: 72px;
+  height: 14px;
+  left: 26px;
+  top: 56px;
+}
+
+.menu-thumb[data-icon='agent']::after,
+.menu-thumb[data-icon='drone']::after {
+  width: 28px;
+  height: 28px;
+  left: 48px;
+  top: 34px;
+  border-radius: 999px;
+}
+
+.menu-thumb[data-icon='drone']::before {
+  left: 32px;
+  right: 32px;
+  top: 52px;
+  bottom: auto;
+  height: 2px;
+  background: color-mix(in srgb, var(--card-accent) 72%, white 8%);
+}
+
+.menu-thumb[data-icon='display']::after,
+.menu-thumb[data-icon='terminal']::after {
+  width: 82px;
+  height: 38px;
+  left: 18px;
+  top: 30px;
+}
+
+.menu-thumb[data-icon='rack']::after,
+.menu-thumb[data-icon='patch']::after,
+.menu-thumb[data-icon='fridge']::after,
+.menu-thumb[data-icon='vendor']::after {
+  width: 40px;
+  height: 70px;
+  left: 38px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='audio']::after {
+  width: 18px;
+  height: 54px;
+  left: 28px;
+  top: 26px;
+  box-shadow: 42px 0 0 color-mix(in srgb, var(--card-accent) 18%, rgba(8, 12, 22, 0.92));
+}
+
+.menu-thumb[data-icon='legend']::after {
+  width: 90px;
+  height: 52px;
+  left: 16px;
+  top: 20px;
+}
+
+.menu-thumb[data-icon='neon']::after {
+  width: 80px;
+  height: 24px;
+  left: 18px;
+  top: 40px;
+  background: transparent;
+  border: 3px solid color-mix(in srgb, var(--card-accent) 72%, white 8%);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--card-accent) 50%, transparent);
+}
+
+.menu-thumb[data-icon='arcade']::after {
+  width: 52px;
+  height: 70px;
+  left: 34px;
+  top: 18px;
+}
+
+.menu-thumb[data-icon='trophy']::after {
+  width: 22px;
+  height: 28px;
+  left: 50px;
+  top: 26px;
+}
+
+.scene-thumb {
+  background:
+    linear-gradient(180deg, var(--scene-wall-top), var(--scene-wall-mid) 54%, var(--scene-wall-bottom)),
+    #10151f;
+}
+
+.scene-thumb::before {
+  content: '';
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 38%;
+  background:
+    repeating-linear-gradient(180deg, var(--scene-floor-a), var(--scene-floor-a) 10px, var(--scene-floor-b) 10px, var(--scene-floor-b) 20px);
+}
+
+.scene-thumb::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 18px;
+  width: 96px;
+  height: 48px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 24%),
+    linear-gradient(180deg, var(--scene-accent), var(--scene-secondary));
+  opacity: 0.72;
+}
+
+.scene-thumb-pill {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 1;
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(8, 12, 20, 0.82);
+  color: var(--text);
+  font-size: 0.66rem;
+  font-family:
+    'IBM Plex Mono',
+    'Cascadia Mono',
+    monospace;
+}
+
+.menu-inventory-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inventory-card {
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 8px;
+}
+
+.inventory-card strong {
+  font-size: 0.94rem;
+}
+
+.inventory-card--wide {
+  grid-column: 1 / -1;
+}
+
+.inventory-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inventory-chip {
+  position: relative;
+  min-width: 160px;
+  padding: 10px 12px 10px 42px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  gap: 3px;
+}
+
+.inventory-chip strong {
+  font-size: 0.78rem;
+}
+
+.inventory-chip-icon {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  border: 1px solid color-mix(in srgb, var(--chip-accent) 54%, white 8%);
+  background: color-mix(in srgb, var(--chip-accent) 16%, rgba(8, 12, 22, 0.92));
+}
+
+.inventory-chip-icon::before {
+  inset: 5px;
+  background: color-mix(in srgb, var(--chip-accent) 72%, white 8%);
 }
 
 .profile-modal[hidden] {
@@ -961,6 +1623,11 @@ body::after {
     padding: 12px;
   }
 
+  .menu-fab {
+    top: 12px;
+    left: 12px;
+  }
+
   .stage-frame {
     width: min(100%, calc((100svh - 520px) * 22 / 13));
   }
@@ -991,11 +1658,27 @@ body::after {
     grid-template-columns: 1fr;
   }
 
+  .game-menu-sheet {
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    bottom: 14px;
+    width: auto;
+  }
+
+  .game-menu-topline,
+  .menu-card-grid,
+  .menu-inventory-grid,
   .wallet-strip,
   .profile-stats {
     grid-template-columns: 1fr;
   }
 
+  .menu-card {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-panel-head,
   .upgrade-meta {
     flex-direction: column;
     align-items: flex-start;

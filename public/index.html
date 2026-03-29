@@ -22,6 +22,14 @@
 
       <section class="playground">
         <div class="stage-shell">
+          <button class="menu-fab" id="menuButton" type="button">
+            <span class="menu-fab-icon">[]</span>
+            <span class="menu-fab-copy">
+              <strong>Menu</strong>
+              <span>Shop and scenes</span>
+            </span>
+          </button>
+
           <div class="stage-frame">
             <div class="stage" id="stage">
               <canvas id="officeCanvas"></canvas>
@@ -160,6 +168,77 @@
             <span class="info-kicker">Recent Codex workspaces</span>
           </div>
           <div class="profile-projects" id="recentWorkspaceList"></div>
+        </section>
+      </article>
+    </section>
+
+    <section class="game-menu" id="gameMenu" hidden>
+      <div class="game-menu-backdrop" id="gameMenuBackdrop"></div>
+      <article class="game-menu-sheet">
+        <header class="game-menu-header">
+          <div>
+            <div class="info-kicker">Game systems</div>
+            <h2>Studio Menu</h2>
+            <p>Manage scenes, upgrades, and everything already unlocked in the office.</p>
+          </div>
+          <button class="game-menu-close" id="menuClose" type="button">Close</button>
+        </header>
+
+        <section class="game-menu-topline">
+          <div class="menu-hero-card">
+            <span class="wallet-label">Wallet</span>
+            <strong id="menuCoinCount">0 coins</strong>
+            <span class="wallet-copy" id="menuHeroCopy">Link GitHub progress to unlock the full shop.</span>
+          </div>
+          <div class="menu-hero-card">
+            <span class="wallet-label">Owned upgrades</span>
+            <strong id="menuOwnedCount">0 items</strong>
+            <span class="wallet-copy" id="menuOwnedCopy">Starter office loadout.</span>
+          </div>
+          <div class="menu-hero-card">
+            <span class="wallet-label">Active scene</span>
+            <strong id="menuThemeName">Starter Loft</strong>
+            <span class="wallet-copy" id="menuThemeMood">Calm studio with warm wood and slate walls.</span>
+          </div>
+        </section>
+
+        <nav class="menu-tabs">
+          <button class="menu-tab is-active" id="menuTabShop" type="button" data-tab="shop">Shop</button>
+          <button class="menu-tab" id="menuTabScenes" type="button" data-tab="scenes">Scenes</button>
+          <button class="menu-tab" id="menuTabInventory" type="button" data-tab="inventory">Inventory</button>
+        </nav>
+
+        <section class="menu-panel is-active" id="menuPanelShop" data-panel="shop">
+          <div class="menu-panel-head">
+            <div>
+              <div class="info-kicker">Upgrade catalog</div>
+              <h3>Office Shop</h3>
+            </div>
+            <span class="menu-panel-copy">Buy upgrades that visibly change the room.</span>
+          </div>
+          <div class="menu-card-grid" id="menuShopGrid"></div>
+        </section>
+
+        <section class="menu-panel" id="menuPanelScenes" data-panel="scenes">
+          <div class="menu-panel-head">
+            <div>
+              <div class="info-kicker">Environment presets</div>
+              <h3>Scene Library</h3>
+            </div>
+            <span class="menu-panel-copy">Preview unlocked and upcoming room themes.</span>
+          </div>
+          <div class="menu-card-grid menu-card-grid--scenes" id="menuSceneGrid"></div>
+        </section>
+
+        <section class="menu-panel" id="menuPanelInventory" data-panel="inventory">
+          <div class="menu-panel-head">
+            <div>
+              <div class="info-kicker">What you own</div>
+              <h3>Studio Inventory</h3>
+            </div>
+            <span class="menu-panel-copy">Track equipped systems, owned upgrades, and current title.</span>
+          </div>
+          <div class="menu-inventory-grid" id="menuInventoryGrid"></div>
         </section>
       </article>
     </section>
