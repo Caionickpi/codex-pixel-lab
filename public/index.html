@@ -1,0 +1,170 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex Pixel Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="experience">
+      <header class="hud">
+        <div class="brand">
+          <div class="eyebrow">Realtime Codex office</div>
+          <h1>Codex Pixel Lab</h1>
+        </div>
+        <div class="hud-chips">
+          <div class="hud-chip" id="connectionPill">Scanning Codex sessions...</div>
+          <div class="hud-chip hud-chip--soft" id="projectPill">No workspace linked</div>
+          <div class="hud-chip hud-chip--soft" id="modelBadge">gpt-5.4</div>
+        </div>
+      </header>
+
+      <section class="playground">
+        <div class="stage-shell">
+          <div class="stage-frame">
+            <div class="stage" id="stage">
+              <canvas id="officeCanvas"></canvas>
+              <div class="bubble-layer" id="bubbleLayer"></div>
+            </div>
+          </div>
+        </div>
+
+        <section class="control-bar">
+          <div class="control-status">
+            <div class="runtime-pill" id="runtimeBadge">Idle</div>
+            <div class="control-project" id="projectBadge">No project linked</div>
+          </div>
+          <form id="connectForm" class="connect-form">
+            <input id="workspaceInput" class="pixel-input" placeholder="D:\Projects\MyApp" />
+            <button type="submit" class="pixel-button">Connect</button>
+            <button type="button" class="pixel-button pixel-button--ghost" id="latestButton">
+              Latest
+            </button>
+          </form>
+        </section>
+
+        <section class="info-rail">
+          <article class="info-panel info-panel--activity">
+            <div class="info-kicker">Activity</div>
+            <h2 class="info-title" id="headline">Transcript synced</h2>
+            <p class="info-copy" id="summary">
+              Watching your Codex workspace in real time.
+            </p>
+          </article>
+
+          <article class="info-panel info-panel--metrics">
+            <div class="info-grid">
+              <div class="info-item">
+                <span>Tool</span>
+                <strong id="toolLabel">Idle</strong>
+              </div>
+              <div class="info-item">
+                <span>Debug</span>
+                <strong id="debugLabel">No recent errors</strong>
+              </div>
+              <div class="info-item">
+                <span>Git</span>
+                <strong id="gitLabel">Workspace linked</strong>
+              </div>
+              <div class="info-item">
+                <span>Feed</span>
+                <strong id="feedLabel">Waiting for activity</strong>
+              </div>
+            </div>
+          </article>
+
+          <button class="player-glance" id="playerGlance" type="button">
+            <img class="player-avatar" id="playerAvatarMini" alt="" />
+            <div class="player-glance-copy">
+              <span class="info-kicker">Player</span>
+              <strong id="playerNameMini">Loading GitHub profile...</strong>
+              <span id="playerLevelMini">Level 1</span>
+            </div>
+            <div class="player-glance-meta">
+              <span class="player-glance-commits" id="playerCommitMini">0 commits</span>
+              <span class="player-glance-coins" id="playerCoinMini">0 coins</span>
+            </div>
+          </button>
+        </section>
+
+        <div class="recent-projects" id="recentProjects"></div>
+      </section>
+    </main>
+
+    <section class="profile-modal" id="profileModal" hidden>
+      <div class="profile-backdrop" id="profileBackdrop"></div>
+      <article class="profile-sheet">
+        <button class="profile-close" id="profileClose" type="button">Close</button>
+        <button class="profile-refresh" id="playerRefreshButton" type="button">Refresh</button>
+
+        <header class="profile-header">
+          <img class="profile-avatar" id="playerAvatar" alt="" />
+          <div class="profile-header-copy">
+            <div class="info-kicker" id="profileSource">Selected via Codex</div>
+            <h2 id="playerName">Loading profile...</h2>
+            <p id="playerHandle">@github</p>
+            <p id="playerBio">GitHub data will appear here after the local player sync finishes.</p>
+          </div>
+        </header>
+
+        <section class="profile-level">
+          <div class="profile-level-copy">
+            <span class="info-kicker">GitHub level</span>
+            <div class="profile-level-row">
+              <strong id="playerLevel">Level 1</strong>
+              <span id="playerRank">New Recruit</span>
+            </div>
+          </div>
+          <div class="profile-progress">
+            <div class="profile-progress-fill" id="playerProgressBar"></div>
+          </div>
+          <div class="profile-progress-copy" id="playerProgressText">0 commits to next level</div>
+        </section>
+
+        <section class="wallet-strip" id="playerWallet"></section>
+
+        <section class="profile-stats" id="playerStats"></section>
+
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <span class="info-kicker">Title roadmap</span>
+          </div>
+          <div class="title-rail" id="titleRoadmap"></div>
+        </section>
+
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <span class="info-kicker">Office loadout</span>
+          </div>
+          <div class="loadout-grid" id="playerLoadout"></div>
+          <div class="scene-switcher" id="sceneSwitcher"></div>
+        </section>
+
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <span class="info-kicker">Upgrades shop</span>
+          </div>
+          <div class="upgrade-grid" id="upgradeShop"></div>
+        </section>
+
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <span class="info-kicker">GitHub projects</span>
+          </div>
+          <div class="profile-projects" id="playerProjects"></div>
+        </section>
+
+        <section class="profile-section">
+          <div class="profile-section-head">
+            <span class="info-kicker">Recent Codex workspaces</span>
+          </div>
+          <div class="profile-projects" id="recentWorkspaceList"></div>
+        </section>
+      </article>
+    </section>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
+
