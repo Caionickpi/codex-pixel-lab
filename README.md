@@ -4,6 +4,10 @@ Codex Pixel Lab is a real-time pixel office for Codex Desktop.
 
 It watches local Codex session transcripts, turns active work into live in-world agents, and frames software development as a cozy, playful, progression-driven dev RPG.
 
+### 🚀 Now with VS Code Extension
+
+Pixel Lab is now fully integrated into VS Code, allowing you to watch your agents directly from your sidebar or a dedicated center panel.
+
 ![Codex Pixel Lab preview](docs/media/codex-pixel-lab-preview.png)
 
 ## Why this exists
@@ -46,6 +50,7 @@ The office is synced to the project currently being worked on in Codex.
 - latest matching session is resolved from local Codex transcript files
 - shell commands, commentary, and runtime state feed the scene
 - characters move, react, and expose meaningful status in-world
+- **Gemini Integration**: 100% synchronization with Gemini terminals, spawning character actions in real-time.
 
 ### 2. Developer identity
 
@@ -67,6 +72,10 @@ The intended long-term loop is:
 
 ## Current feature set
 
+- **VS Code Integration**: Native sidebar and central panel support for a fully integrated experience.
+- **Real-time Gemini Sync**: 1:1 synchronization with Gemini terminal sessions.
+- **Antigravity Adapter**: Enhanced support for Antigravity agents with idle, thinking, and celebration animations.
+- **Clean Room Interface**: A perfectly synchronized office environment that reflects your active workspace.
 - real-time Codex transcript bridge
 - project-to-session matching by workspace path
 - pixel office rendered on a single canvas

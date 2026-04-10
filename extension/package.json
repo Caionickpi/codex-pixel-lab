@@ -1,0 +1,61 @@
+{
+  "name": "pixel-lab",
+  "displayName": "Pixel Lab",
+  "description": "Um escritório isométrico pixel-art 100% sincronizado com seus terminais Gemini. Assista seus agentes trabalhando em tempo real!",
+  "version": "1.0.0",
+  "publisher": "caionickpi",
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "keywords": [
+    "codex",
+    "antigravity",
+    "pixel-office",
+    "ai-agent",
+    "dev-rpg"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caionickpi/pixel-lab.git"
+  },
+  "main": "./src/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "pixel-lab-explorer",
+          "title": "Pixel Lab",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "views": {
+      "pixel-lab-explorer": [
+        {
+          "type": "webview",
+          "id": "pixelLab.sidebar",
+          "name": "Pixel Lab",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "pixelLab.open",
+        "title": "Abrir Pixel Lab (Painel Central)",
+        "category": "Pixel Lab"
+      }
+    ]
+  },
+  "scripts": {
+    "package": "npx -y @vscode/vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "^2.22.0"
+  }
+}

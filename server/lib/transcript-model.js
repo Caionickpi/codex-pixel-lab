@@ -1,3 +1,4 @@
+import path from 'node:path';
 import { compactText, firstMeaningfulLine, formatRelativeTime, isLikelyMetaUserMessage, truncate } from './utils.js';
 
 function extractTextContent(content) {
@@ -38,7 +39,7 @@ function summarizeShellOutput(output) {
 }
 
 function classifyTool(name, args) {
-  if (name === 'shell_command') {
+  if (name === 'shell_command' || name === 'run_shell_command') {
     return {
       kind: 'shell',
       label: args.command || 'Shell command',
@@ -49,6 +50,20 @@ function classifyTool(name, args) {
     return {
       kind: 'terminal',
       label: 'Reading terminal output',
+    };
+  }
+
+  if (['grep_search', 'read_file', 'glob', 'web_fetch', 'google_web_search', 'codebase_investigator'].includes(name)) {
+    return {
+      kind: 'research',
+      label: name,
+    };
+  }
+
+  if (['replace', 'write_file', 'save_memory', 'activate_skill'].includes(name)) {
+    return {
+      kind: 'working',
+      label: name,
     };
   }
 
@@ -72,8 +87,9 @@ function inferShellActivity(command = '') {
   if (/\b(npm|pnpm|yarn|bun)\b.*\b(dev|build|test|lint|start)\b/.test(text)) return 'Running task';
   if (/\bgit\b/.test(text)) return 'Checking git';
   if (/\b(rg|select-string|get-childitem|get-content|cat|ls|dir|find)\b/.test(text)) return 'Scanning files';
-  if (/\b(node|python)\b/.test(text)) return 'Running script';
+  if (/\b(node|python|ts-node)\b/.test(text)) return 'Running script';
   if (/\b(curl|invoke-webrequest|wget)\b/.test(text)) return 'Checking endpoint';
+  if (/\b(rm|del|mkdir|cp|mv)\b/.test(text)) return 'File system ops';
   return 'Running shell';
 }
 
@@ -85,6 +101,7 @@ function inferCommentaryActivity(text = '') {
   if (/\b(read|inspect|review|scan|analis|revis|context)\b/.test(lower)) return 'Reviewing code';
   if (/\b(connect|sync|session|transcript)\b/.test(lower)) return 'Syncing session';
   if (/\b(plan|next|agora|vou|depois)\b/.test(lower)) return 'Planning next step';
+  if (/\b(bug|erro|falha|fix|consert)\b/.test(lower)) return 'Fixing bugs';
   return truncate(firstMeaningfulLine(text) || 'Working', 32);
 }
 
@@ -99,13 +116,61 @@ function conciseBranchLabel(workspace) {
 function summarizeMission(text = '') {
   const lower = compactText(text).toLowerCase();
   if (!lower) return 'current request';
-  if (/\b(bubble|chat|agent)\b/.test(lower)) return 'agent dialogue';
+  if (/\b(bubble|chat|agent|balao)\b/.test(lower)) return 'agent dialogue';
   if (/\b(github|repo|repository|readme|english|commit)\b/.test(lower)) return 'GitHub launch pack';
   if (/\b(profile|level|progress|coin|upgrade|title)\b/.test(lower)) return 'player progression';
   if (/\b(design|ui|layout|style|visual|modal)\b/.test(lower)) return 'UI polish';
   if (/\b(scene|office|desk|animation|lighting|environment)\b/.test(lower)) return 'office world';
   if (/\b(debug|bug|fix|error|health)\b/.test(lower)) return 'debug pass';
   return truncate(firstMeaningfulLine(text) || 'current request', 42);
+}
+
+function summarizeToolFocus(tool) {
+  if (!tool) return 'Working';
+  const name = tool.name;
+  const args = tool.arguments || {};
+
+  if (name === 'shell_command' || name === 'run_shell_command') {
+    return summarizeShellFocus(tool.command);
+  }
+
+  if (name === 'grep_search') {
+    return `Searching for '${truncate(args.pattern, 20)}'`;
+  }
+
+  if (name === 'read_file') {
+    return `Reading ${truncate(path.basename(args.file_path || ''), 24)}`;
+  }
+
+  if (name === 'replace') {
+    return `Patching ${truncate(path.basename(args.file_path || ''), 24)}`;
+  }
+
+  if (name === 'write_file') {
+    return `Creating ${truncate(path.basename(args.file_path || ''), 24)}`;
+  }
+
+  if (name === 'glob') {
+    return `Finding ${truncate(args.pattern, 24)} files`;
+  }
+
+  if (name === 'google_web_search') {
+    return `Searching web for '${truncate(args.query, 20)}'`;
+  }
+
+  if (name === 'web_fetch') {
+    return 'Fetching web source';
+  }
+
+  if (name === 'codebase_investigator') {
+    return 'Mapping codebase';
+  }
+
+  if (name === 'save_memory') {
+    return 'Updating memory';
+  }
+
+  return tool.label || name;
 }
 
 function summarizeShellFocus(command = '') {
@@ -122,20 +187,16 @@ function summarizeShellFocus(command = '') {
   if (/\bgit add|git commit\b/.test(lower)) return 'git commit flow';
   if (/\bget-content|cat\b/.test(lower)) return 'file read';
   if (/\brg|select-string|find\b/.test(lower)) return 'code search';
+  if (/\bnpm run dev\b/.test(lower)) return 'dev server';
+  if (/\bnpm (run )?test\b/.test(lower)) return 'running tests';
   return truncate(text, 36);
 }
 
 function describeCodexDuty(model) {
-  if (model.currentTool?.kind === 'shell') {
-    return `Building ${summarizeMission(model.lastUserPrompt)} via ${summarizeShellFocus(model.currentTool.command)}`;
-  }
-
-  if (model.currentTool?.kind === 'research') {
-    return `Researching ${summarizeMission(model.lastUserPrompt)} sources`;
-  }
-
-  if (model.currentTool?.kind === 'terminal') {
-    return 'Reading terminal state and next actions';
+  if (model.currentTool) {
+    const focus = summarizeToolFocus(model.currentTool);
+    const mission = summarizeMission(model.lastUserPrompt);
+    return `${focus} for ${mission}`;
   }
 
   if (model.lastCommentary) {
@@ -151,19 +212,15 @@ function describeCodexDuty(model) {
 
 function describeTraceDuty(model) {
   if (model.lastError) {
-    return `Debugging failure: ${truncate(model.lastError.headline, 30)}`;
+    return `Debugging failure: ${truncate(model.lastError.headline, 40)}`;
   }
 
-  if (model.currentTool?.kind === 'shell') {
-    return `Watching ${summarizeShellFocus(model.currentTool.command)} output`;
+  if (model.currentTool) {
+    return `Verifying ${summarizeToolFocus(model.currentTool)}...`;
   }
 
-  if (model.lastTool?.name === 'shell_command') {
-    return `Verified ${summarizeShellFocus(model.lastTool.command)} results`;
-  }
-
-  if (model.currentTool?.kind === 'terminal') {
-    return 'Checking terminal logs for regressions';
+  if (model.lastTool) {
+    return `Last task: ${truncate(model.lastTool.headline || 'finished', 40)}`;
   }
 
   return 'Watching runtime logs and command health';
@@ -173,18 +230,18 @@ function describeScoutDuty(workspace, model) {
   const project = workspace?.projectName || 'workspace';
 
   if (!workspace?.isGit) {
-    return `Tracking ${project} workspace sync`;
+    return `Tracking ${project} sync`;
   }
 
   if (workspace.dirtyCount) {
-    return `Tracking ${project} on ${workspace.branch || 'detached'} with ${workspace.dirtyCount} changed`;
+    return `${workspace.dirtyCount} files changed in ${workspace.branch || 'detached'}`;
   }
 
-  if (model.currentTool?.kind === 'research') {
-    return `Tracking ${project} context while research runs`;
+  if (model.currentTool) {
+    return `Context locked on ${project}`;
   }
 
-  return `Tracking ${project} on ${workspace.branch || 'detached'}, clean tree`;
+  return `Clean tree on ${workspace.branch || 'detached'}`;
 }
 
 export class CodexTranscriptModel {
@@ -411,7 +468,7 @@ export class CodexTranscriptModel {
     const lastCommentaryAt = this.lastCommentaryAt ? new Date(this.lastCommentaryAt).getTime() : 0;
     const lastRecordAt = this.lastRecordAt ? new Date(this.lastRecordAt).getTime() : 0;
 
-    if (this.currentTool && now - currentStartedAt < 90_000) {
+    if (this.currentTool && now - currentStartedAt < 300_000) {
       if (this.currentTool.kind === 'research') return 'research';
       if (this.currentTool.kind === 'shell' || this.currentTool.kind === 'terminal') return 'working';
       return 'thinking';
@@ -446,7 +503,7 @@ export class CodexTranscriptModel {
         sprite: 0,
         station: 'mainDesk',
         status: runtimeStatus,
-        bubble: truncate(mainBubble, 56),
+        bubble: truncate(mainBubble, 120),
       },
       {
         id: 'trace',
@@ -455,7 +512,7 @@ export class CodexTranscriptModel {
         sprite: 2,
         station: 'traceDesk',
         status: this.lastError ? 'error' : this.currentTool?.kind === 'shell' ? 'working' : 'idle',
-        bubble: truncate(traceBubble, 56),
+        bubble: truncate(traceBubble, 120),
       },
       {
         id: 'scout',
@@ -464,7 +521,7 @@ export class CodexTranscriptModel {
         sprite: 5,
         station: 'board',
         status: workspace?.dirtyCount ? 'working' : 'idle',
-        bubble: truncate(scoutBubble, 56),
+        bubble: truncate(scoutBubble, 120),
       },
     ];
   }

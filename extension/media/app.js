@@ -1,80 +1,134 @@
-import { THEME_DEFS, computeRpgState, getCurrentTitle, getThemeById, getUpgradeById } from './rpg.js';
+﻿import { THEME_DEFS, computeRpgState, getCurrentTitle, getThemeById, getUpgradeById } from './rpg.js';
 
 import { renderUpgradeArt } from './upgrade-art.js';
 
 const TILE_SIZE = 16;
-const OFFICE_COLS = 22;
-const OFFICE_ROWS = 13;
+const OFFICE_COLS = 27;
+const OFFICE_ROWS = 22;
 const RPG_STORAGE_KEY = 'codex-pixel-lab-rpg-v1';
+
+let mapZoomOffset = 0;
+let mapPanX = 0;
+let mapPanY = 0;
 
 const ASSET_MANIFEST = {
   floors: [
-    '/assets/floors/floor_1.png',
-    '/assets/floors/floor_2.png',
-    '/assets/floors/floor_5.png',
-    '/assets/floors/floor_6.png',
+    'assets/floors/floor_1.png',
+    'assets/floors/floor_2.png',
+    'assets/floors/floor_5.png',
+    'assets/floors/floor_6.png',
   ],
   furniture: {
-    desk: '/assets/furniture/DESK/DESK_FRONT.png',
-    pc1: '/assets/furniture/PC/PC_FRONT_ON_1.png',
-    pc2: '/assets/furniture/PC/PC_FRONT_ON_2.png',
-    pc3: '/assets/furniture/PC/PC_FRONT_ON_3.png',
-    board: '/assets/furniture/WHITEBOARD/WHITEBOARD.png',
-    bookshelf: '/assets/furniture/DOUBLE_BOOKSHELF/DOUBLE_BOOKSHELF.png',
-    sofa: '/assets/furniture/SOFA/SOFA_FRONT.png',
-    plant: '/assets/furniture/LARGE_PLANT/LARGE_PLANT.png',
-    hangingPlant: '/assets/furniture/HANGING_PLANT/HANGING_PLANT.png',
-    painting: '/assets/furniture/SMALL_PAINTING/SMALL_PAINTING.png',
-    clock: '/assets/furniture/CLOCK/CLOCK.png',
-    table: '/assets/furniture/COFFEE_TABLE/COFFEE_TABLE.png',
-    mug: '/assets/furniture/COFFEE/COFFEE.png',
+    desk: 'assets/furniture/DESK/DESK_FRONT.png',
+    pc1: 'assets/furniture/PC/PC_FRONT_ON_1.png',
+    pc2: 'assets/furniture/PC/PC_FRONT_ON_2.png',
+    pc3: 'assets/furniture/PC/PC_FRONT_ON_3.png',
+    board: 'assets/furniture/WHITEBOARD/WHITEBOARD.png',
+    bookshelf: 'assets/furniture/DOUBLE_BOOKSHELF/DOUBLE_BOOKSHELF.png',
+    sofa: 'assets/furniture/SOFA/SOFA_FRONT.png',
+    plant: 'assets/furniture/LARGE_PLANT/LARGE_PLANT.png',
+    hangingPlant: 'assets/furniture/HANGING_PLANT/HANGING_PLANT.png',
+    painting: 'assets/furniture/SMALL_PAINTING/SMALL_PAINTING.png',
+    clock: 'assets/furniture/CLOCK/CLOCK.png',
+    table: 'assets/furniture/COFFEE_TABLE/COFFEE_TABLE.png',
+    mug: 'assets/furniture/COFFEE/COFFEE.png',
   },
   characters: {
-    codex: '/assets/characters/char_0.png',
-    trace: '/assets/characters/char_2.png',
-    scout: '/assets/characters/char_5.png',
+    codex: 'assets/characters/char_0.png',
+    trace: 'assets/characters/char_2.png',
+    scout: 'assets/characters/char_5.png',
+    char_0: 'assets/characters/char_0.png',
+    char_1: 'assets/characters/char_1.png',
+    char_2: 'assets/characters/char_2.png',
+    char_3: 'assets/characters/char_3.png',
+    char_4: 'assets/characters/char_4.png',
+    char_5: 'assets/characters/char_5.png',
   },
 };
 
 const STATIONS = {
   mainDesk: {
-    home: { x: 9.5, y: 7.1, face: 'down' },
+    home: { x: 13.5, y: 9.5, face: 'down' },
     idle: [
-      { x: 8.45, y: 9.15 },
-      { x: 10.55, y: 9.05 },
+      { x: 11.5, y: 11.5 },
+      { x: 15.5, y: 11.5 },
     ],
   },
   traceDesk: {
-    home: { x: 15.65, y: 6.45, face: 'down' },
+    home: { x: 7.5, y: 9.5, face: 'down' },
     idle: [
-      { x: 16.8, y: 8.05 },
-      { x: 14.2, y: 8.05 },
+      { x: 5.5, y: 11.5 },
+      { x: 9.5, y: 11.5 },
     ],
   },
   board: {
-    home: { x: 3.65, y: 6.85, face: 'down' },
+    home: { x: 19.5, y: 9.5, face: 'down' },
     idle: [
-      { x: 2.8, y: 8.3 },
-      { x: 5.2, y: 8.1 },
+      { x: 18.5, y: 13.5 },
+      { x: 21.5, y: 13.5 },
+    ],
+  },
+  desk4: {
+    home: { x: 10.5, y: 15.5, face: 'down' },
+    idle: [
+      { x: 8.5, y: 17.5 },
+      { x: 12.5, y: 17.5 },
+    ],
+  },
+  desk5: {
+    home: { x: 16.5, y: 15.5, face: 'down' },
+    idle: [
+      { x: 14.5, y: 17.5 },
+      { x: 18.5, y: 17.5 },
     ],
   },
 };
 
 const FURNITURE_LAYOUT = [
-  { image: 'painting', col: 3, row: 1 },
-  { image: 'board', col: 13, row: 1 },
-  { image: 'bookshelf', col: 18, row: 1 },
-  { image: 'clock', col: 20, row: 1 },
-  { image: 'hangingPlant', col: 5, row: 1 },
-  { image: 'hangingPlant', col: 16, row: 1 },
-  { image: 'desk', col: 2, row: 6 },
-  { image: 'desk', col: 8, row: 7 },
-  { image: 'desk', col: 14, row: 6 },
-  { image: 'table', col: 3, row: 9 },
-  { image: 'mug', col: 4, row: 9 },
-  { image: 'sofa', col: 2, row: 10 },
-  { image: 'plant', col: 1, row: 7 },
-  { image: 'plant', col: 19, row: 8 },
+  // --- CLEAN ROOM CENTRAL AISLE ---
+  // Main Desk (Center-left)
+  { image: 'pc2', col: 13, row: 8 },
+  { image: 'desk', col: 13, row: 9 },
+  
+  // Trace Desk (Left)
+  { image: 'pc1', col: 7, row: 8 },
+  { image: 'desk', col: 7, row: 9 },
+
+  // Board Agent Desk (Right)
+  { image: 'pc3', col: 19, row: 8 },
+  { image: 'desk', col: 19, row: 9 },
+
+  // Secondary Row Desks
+  { image: 'pc2', col: 10, row: 13 },
+  { image: 'desk', col: 10, row: 14 },
+  { image: 'pc1', col: 16, row: 13 },
+  { image: 'desk', col: 16, row: 14 },
+
+  // Modern Office Accents
+  { image: 'plant', col: 3, row: 6 },
+  { image: 'plant', col: 23, row: 6 },
+  { image: 'plant', col: 13, row: 17 },
+  
+  { image: 'bookshelf', col: 5, row: 0 },
+  { image: 'bookshelf', col: 11, row: 0 },
+  { image: 'bookshelf', col: 15, row: 0 },
+  { image: 'bookshelf', col: 21, row: 0 },
+
+  { image: 'clock', col: 13, row: 0 },
+  { image: 'board', col: 8, row: 1 },
+  { image: 'board', col: 18, row: 1 },
+
+  { image: 'painting', col: 2, row: 0 },
+  { image: 'painting', col: 24, row: 0 },
+
+  { image: 'hangingPlant', col: 4, row: 0 },
+  { image: 'hangingPlant', col: 22, row: 0 },
+  
+  // Chill Out Area (Bottom Right Corner)
+  { image: 'sofa', col: 21, row: 14 },
+  { image: 'sofa', col: 21, row: 18 },
+  { image: 'table', col: 21, row: 16 },
+  { image: 'mug', col: 22, row: 16 },
 ];
 
 const dom = {
@@ -289,6 +343,20 @@ function getWsUrl() {
 }
 
 function connectSocket() {
+  if (window.__PIXEL_LAB_VSCODE__) {
+    dom.connectionPill.textContent = 'VS Code bridge online';
+    window.__PIXEL_LAB_ON_SNAPSHOT__ = (data) => {
+      state.snapshot = data;
+      if (data?.ide) {
+        state.currentIde = data.ide;
+        state.ideName = data.ideName || data.ide;
+        updateIdeSelector();
+      }
+      renderDashboard();
+    };
+    return;
+  }
+
   const socket = new WebSocket(getWsUrl());
   state.socket = socket;
 
@@ -316,6 +384,10 @@ function connectSocket() {
 }
 
 function sendConnect(workspacePath) {
+  if (window.__PIXEL_LAB_VSCODE__) {
+    window.__PIXEL_LAB_POST({ type: 'connect', workspacePath });
+    return;
+  }
   if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
   state.socket.send(JSON.stringify({ type: 'connect', workspacePath }));
 }
@@ -339,6 +411,12 @@ function updateBranding() {
 async function switchIde(ideId) {
   if (ideId === state.currentIde) return;
   dom.connectionPill.textContent = `Switching to ${ideId}...`;
+
+  if (window.__PIXEL_LAB_VSCODE__) {
+    window.__PIXEL_LAB_POST({ type: 'setIde', ide: ideId });
+    return;
+  }
+
   try {
     const resp = await fetch('/api/set-ide', {
       method: 'POST',
@@ -371,12 +449,21 @@ function getScale() {
   const rect = dom.stage.getBoundingClientRect();
   const worldWidth = OFFICE_COLS * TILE_SIZE;
   const worldHeight = OFFICE_ROWS * TILE_SIZE;
-  const zoom = Math.max(2, Math.floor(Math.min((rect.width - 32) / worldWidth, (rect.height - 32) / worldHeight)));
+  
+  // Calculate a zoom level that fits the stage nicely.
+  let baseZoom = Math.min((rect.width - 64) / worldWidth, (rect.height - 64) / worldHeight);
+  if (baseZoom < 1) baseZoom = 1;
+  else if (baseZoom < 3) baseZoom = Math.floor(baseZoom); // Snap to integer for clean pixel art
+
+  // Zoom offset grows exponentially or linearly
+  const zoomFactor = Math.pow(1.2, mapZoomOffset);
+  const zoom = Math.max(0.5, baseZoom * zoomFactor);
+
   return {
     rect,
     zoom,
-    offsetX: Math.floor((rect.width - worldWidth * zoom) / 2),
-    offsetY: Math.floor((rect.height - worldHeight * zoom) / 2),
+    offsetX: Math.floor((rect.width - worldWidth * zoom) / 2) + mapPanX,
+    offsetY: Math.floor((rect.height - worldHeight * zoom) / 2) + mapPanY,
   };
 }
 
@@ -578,46 +665,45 @@ function drawRoomShell(scale, timeSeconds) {
   const palette = runtimePalette(state.snapshot?.runtime?.status);
   const theme = activeTheme();
 
-  ctx.fillStyle = '#070b14';
-  ctx.fillRect(0, 0, dom.stage.clientWidth, dom.stage.clientHeight);
+  ctx.fillStyle = '#100f1c'; // Dark background outside room
+  ctx.fillRect(0, 0, scale.rect.width, Math.max(1, scale.rect.height));
 
-  const wallGradient = ctx.createLinearGradient(0, scale.offsetY, 0, floorY + TILE_SIZE * scale.zoom);
+  // The 'Clean Room': A unified 27 columns x 22 rows office
+  const totalW = OFFICE_COLS;
+  const totalH = Math.floor(OFFICE_ROWS * 0.75); // walls span the top 4 tiles, floor spans the rest
+
+  // Background for the unified room
+  drawRoomBox(ctx, scale, 1, 2, OFFICE_COLS - 2, OFFICE_ROWS - 3, theme.wallBottom);
+
+  // Outer thick wall border
+  ctx.strokeStyle = '#182433';
+  ctx.lineWidth = 12 * scale.zoom;
+  ctx.lineJoin = 'miter';
+  ctx.strokeRect(scale.offsetX + 1 * TILE_SIZE * scale.zoom - ctx.lineWidth/2, scale.offsetY + 2 * TILE_SIZE * scale.zoom - ctx.lineWidth/2, (OFFICE_COLS - 2) * TILE_SIZE * scale.zoom + ctx.lineWidth, (OFFICE_ROWS - 3) * TILE_SIZE * scale.zoom + ctx.lineWidth);
+
+  // Clean Room Gradient Wall (unified across the top)
+  const wallGradient = ctx.createLinearGradient(0, scale.offsetY + 2 * TILE_SIZE * scale.zoom, 0, scale.offsetY + 6 * TILE_SIZE * scale.zoom);
   wallGradient.addColorStop(0, theme.wallTop);
-  wallGradient.addColorStop(0.45, theme.wallMid);
+  wallGradient.addColorStop(0.5, theme.wallMid);
   wallGradient.addColorStop(1, theme.wallBottom);
+  
   ctx.fillStyle = wallGradient;
-  ctx.fillRect(scale.offsetX, scale.offsetY, width, height);
+  ctx.fillRect(scale.offsetX + 1 * TILE_SIZE * scale.zoom, scale.offsetY + 2 * TILE_SIZE * scale.zoom, (OFFICE_COLS - 2) * TILE_SIZE * scale.zoom, 4 * TILE_SIZE * scale.zoom);
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-  ctx.fillRect(scale.offsetX, scale.offsetY, width, TILE_SIZE * scale.zoom);
+  // Windows evenly spaced
+  drawWindow(scale, 4, 1, 5, 2.4, timeSeconds);
+  drawWindow(scale, 11, 1, 5, 2.4, timeSeconds + 0.65);
+  drawWindow(scale, 18, 1, 5, 2.4, timeSeconds + 1.2);
 
-  const ceilingGlow = ctx.createLinearGradient(0, scale.offsetY, 0, scale.offsetY + 2.75 * TILE_SIZE * scale.zoom);
-  ceilingGlow.addColorStop(0, 'rgba(255, 255, 255, 0.12)');
-  ceilingGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
-  ctx.fillStyle = ceilingGlow;
-  ctx.fillRect(scale.offsetX, scale.offsetY, width, 3 * TILE_SIZE * scale.zoom);
+  // Ceiling Lamps
+  drawCeilingLamp(scale, 6.5, timeSeconds + 0.3);
+  drawCeilingLamp(scale, 13.5, timeSeconds + 0.6);
+  drawCeilingLamp(scale, 20.5, timeSeconds + 0.9);
+}
 
-  for (let panel = 0; panel < 6; panel += 1) {
-    const x = scale.offsetX + panel * 3.66 * TILE_SIZE * scale.zoom;
-    ctx.fillStyle = panel % 2 === 0 ? 'rgba(255, 255, 255, 0.018)' : 'rgba(255, 255, 255, 0.04)';
-    ctx.fillRect(x, scale.offsetY + 2 * TILE_SIZE * scale.zoom, 2, floorY - scale.offsetY);
-  }
-
-  drawWindow(scale, 2, 1, 5, 2.4, timeSeconds);
-  drawWindow(scale, 8.4, 1, 5, 2.4, timeSeconds + 0.65);
-  drawWindow(scale, 14.8, 1, 5, 2.4, timeSeconds + 1.3);
-  drawSceneMood(scale, timeSeconds, theme, palette);
-
-  ctx.fillStyle = 'rgba(228, 235, 255, 0.2)';
-  ctx.fillRect(scale.offsetX, floorY - 5, width, 5);
-
-  ctx.fillStyle = `rgba(${palette.accent}, 0.09)`;
-  ctx.fillRect(scale.offsetX + 6.5 * TILE_SIZE * scale.zoom, floorY, 6.2 * TILE_SIZE * scale.zoom, 5.7 * TILE_SIZE * scale.zoom);
-  ctx.fillStyle = `rgba(${palette.secondary}, 0.06)`;
-  ctx.fillRect(scale.offsetX + 13.3 * TILE_SIZE * scale.zoom, floorY - 0.4 * TILE_SIZE * scale.zoom, 5.8 * TILE_SIZE * scale.zoom, 4.5 * TILE_SIZE * scale.zoom);
-
-  drawCeilingLamp(scale, 6.6, timeSeconds + 0.3);
-  drawCeilingLamp(scale, 15.2, timeSeconds + 0.9);
+function drawRoomBox(ctx, scale, col, row, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(scale.offsetX + col * TILE_SIZE * scale.zoom, scale.offsetY + row * TILE_SIZE * scale.zoom, w * TILE_SIZE * scale.zoom, h * TILE_SIZE * scale.zoom);
 }
 
 function drawWindow(scale, col, row, widthTiles, heightTiles, timeSeconds) {
@@ -817,26 +903,36 @@ function drawRug(scale, col, row, widthTiles, heightTiles, colors) {
 }
 
 function drawFloor(scale) {
-  const startY = scale.offsetY + 4.5 * TILE_SIZE * scale.zoom;
-  const plankHeight = Math.max(4, Math.floor(scale.zoom * 4));
-  const width = OFFICE_COLS * TILE_SIZE * scale.zoom;
-  const height = OFFICE_ROWS * TILE_SIZE * scale.zoom - (startY - scale.offsetY);
   const theme = activeTheme();
 
-  ctx.fillStyle = theme.floorA;
-  ctx.fillRect(scale.offsetX, startY, width, height);
+  // CLEAN ROOM - FULL WIDTH MODERN FLOOR (e.g. clean polished wood or light ceramic)
+  const roomX = scale.offsetX + 1 * TILE_SIZE * scale.zoom;
+  const roomY = scale.offsetY + 6 * TILE_SIZE * scale.zoom;
+  const roomW = (OFFICE_COLS - 2) * TILE_SIZE * scale.zoom;
+  const roomH = (OFFICE_ROWS - 9) * TILE_SIZE * scale.zoom;
+  
+  // Clean sleek base
+  ctx.fillStyle = '#ded9d3'; // sleek off-white ceramic/wood base
+  ctx.fillRect(roomX, roomY, roomW, roomH);
 
-  for (let y = 0; y < height; y += plankHeight) {
-    const band = Math.floor(y / plankHeight);
-    ctx.fillStyle = band % 2 === 0 ? theme.floorA : theme.floorB;
-    ctx.fillRect(scale.offsetX, startY + y, width, plankHeight);
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-    ctx.fillRect(scale.offsetX, startY + y, width, 1);
+  // Modern wide tile pattern
+  ctx.strokeStyle = '#c4beb6';
+  ctx.lineWidth = 1;
+  const tileSize = 2 * TILE_SIZE * scale.zoom;
+  
+  ctx.beginPath();
+  for (let x = tileSize; x < roomW; x += tileSize) {
+    ctx.moveTo(roomX + x, roomY);
+    ctx.lineTo(roomX + x, roomY + roomH);
   }
+  for (let y = tileSize; y < roomH; y += tileSize) {
+    ctx.moveTo(roomX, roomY + y);
+    ctx.lineTo(roomX + roomW, roomY + y);
+  }
+  ctx.stroke();
 
-  drawRug(scale, 6.85, 7.15, 5.6, 3.45, theme.rugs[0]);
-  drawRug(scale, 14.25, 6.4, 4.7, 2.9, theme.rugs[1]);
-  drawRug(scale, 2.35, 9.15, 4.7, 2.7, theme.rugs[2]);
+  // Add a nice large central rug for real Antigravity agents to cluster
+  drawRug(scale, 10.5, 9.5, 6, 4, theme.rugs[0]);
 }
 
 function drawAmbient(scale, timeSeconds) {
@@ -894,38 +990,10 @@ function drawAmbient(scale, timeSeconds) {
 }
 
 function drawFurniture(scale, timeSeconds) {
-  const pcFrame = ['pc1', 'pc2', 'pc3'][Math.floor(timeSeconds * 5) % 3];
   const palette = runtimePalette(state.snapshot?.runtime?.status);
   const dynamicItems = [
-    ...FURNITURE_LAYOUT,
-    { image: pcFrame, col: 2, row: 5 },
-    { image: pcFrame, col: 8, row: 6 },
-    { image: pcFrame, col: 14, row: 5 },
+    ...FURNITURE_LAYOUT
   ];
-
-  if (hasUpgrade('dual-rig') || hasUpgrade('ultrawide-array') || hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
-    dynamicItems.push({ image: pcFrame, col: 9, row: 6 });
-  }
-
-  if (hasUpgrade('ultrawide-array') || hasUpgrade('quantum-core') || hasUpgrade('master-control-desk')) {
-    dynamicItems.push({ image: pcFrame, col: 7, row: 6 });
-  }
-
-  if (hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
-    dynamicItems.push({ image: pcFrame, col: 3, row: 5 }, { image: pcFrame, col: 15, row: 5 });
-  }
-
-  if (hasUpgrade('window-garden')) {
-    dynamicItems.push({ image: 'plant', col: 17, row: 8 }, { image: 'plant', col: 20, row: 7 });
-  }
-
-  if (hasUpgrade('plant-lab')) {
-    dynamicItems.push(
-      { image: 'hangingPlant', col: 9, row: 1 },
-      { image: 'hangingPlant', col: 19, row: 1 },
-      { image: 'plant', col: 18, row: 8 },
-    );
-  }
 
   const items = dynamicItems
     .map((item) => {
@@ -944,33 +1012,11 @@ function drawFurniture(scale, timeSeconds) {
         ? Math.sin(timeSeconds * 1.6 + item.col) * Math.max(1, scale.zoom * 0.45)
         : 0;
     const x = scale.offsetX + item.col * TILE_SIZE * scale.zoom + sway;
-    const y = scale.offsetY + (item.row + 1) * TILE_SIZE * scale.zoom - height;
+    const y = scale.offsetY + (item.row + 3) * TILE_SIZE * scale.zoom - height;
     ctx.fillStyle = 'rgba(0,0,0,0.15)';
     ctx.fillRect(x + 4, y + height - 8, width - 8, 8);
     ctx.drawImage(item.image, x, y, width, height);
   }
-
-  const glowAlpha = 0.12 + Math.sin(timeSeconds * 3.6) * 0.04;
-  ctx.fillStyle = `rgba(${palette.secondary}, ${glowAlpha * 0.9})`;
-  ctx.fillRect(scale.offsetX + 2.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-  ctx.fillStyle = `rgba(${palette.secondary}, ${glowAlpha})`;
-  ctx.fillRect(scale.offsetX + 8.35 * TILE_SIZE * scale.zoom, scale.offsetY + 6.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-  ctx.fillRect(scale.offsetX + 14.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-
-  if (hasUpgrade('dual-rig') || hasUpgrade('ultrawide-array') || hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
-    ctx.fillRect(scale.offsetX + 9.35 * TILE_SIZE * scale.zoom, scale.offsetY + 6.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-  }
-
-  if (hasUpgrade('legendary-rig') || hasUpgrade('master-control-desk')) {
-    ctx.fillRect(scale.offsetX + 3.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-    ctx.fillRect(scale.offsetX + 15.35 * TILE_SIZE * scale.zoom, scale.offsetY + 5.05 * TILE_SIZE * scale.zoom, 1.45 * TILE_SIZE * scale.zoom, 0.9 * TILE_SIZE * scale.zoom);
-  }
-
-  ctx.fillStyle = `rgba(${palette.accent}, 0.18)`;
-  ctx.fillRect(scale.offsetX + 4.35 * TILE_SIZE * scale.zoom, scale.offsetY + 8.2 * TILE_SIZE * scale.zoom - Math.sin(timeSeconds * 2.4) * 2, 2, 12);
-  ctx.fillRect(scale.offsetX + 4.75 * TILE_SIZE * scale.zoom, scale.offsetY + 8.0 * TILE_SIZE * scale.zoom - Math.sin(timeSeconds * 2.4 + 0.6) * 2, 2, 10);
-
-  drawOfficeUpgrades(scale, timeSeconds, palette);
 }
 
 function drawOfficeUpgrades(scale, timeSeconds, palette) {
@@ -1428,7 +1474,10 @@ function drawActors(scale, timeSeconds) {
     const visual = ensureActorVisual(actor);
     const animation = actorAnimation(actor, visual);
     const frame = frameIndex(animation, timeSeconds + visual.pulse);
-    const image = state.images.get(actor.id);
+    
+    // Load dynamically from sprite ID or fallback to codex
+    const spriteKey = `char_${actor.sprite || 0}`;
+    const image = state.images.get(actor.id) || state.images.get(spriteKey) || state.images.get('codex');
     if (!image) continue;
 
     const rowMap = { down: 0, up: 1, right: 2, left: 2 };
@@ -1556,10 +1605,7 @@ function drawActors(scale, timeSeconds) {
 }
 
 function renderBubbles(anchors) {
-  const visibleAnchors = anchors.filter((anchor) => {
-    const isActive = ['working', 'research', 'talking', 'error', 'thinking'].includes(anchor.status);
-    return anchor.id === state.hoveredActorId || isActive;
-  });
+  const visibleAnchors = state.hoveredActorId ? anchors.filter((anchor) => anchor.id === state.hoveredActorId) : [];
 
   dom.bubbleLayer.innerHTML = visibleAnchors
     .map(
@@ -2970,20 +3016,9 @@ function renderDashboard() {
   const connectionText = snapshot.ok ? 'Live sync' : 'No sync';
 
   dom.connectionPill.dataset.state = snapshot.ok ? 'online' : 'offline';
-  dom.connectionPill.textContent = connectionText;
-  dom.projectPill.textContent = snapshot.ok ? shortProjectName(snapshot) : 'No workspace linked';
-  dom.modelBadge.textContent = snapshot.runtime?.model || 'gpt-5.4';
-  dom.runtimeBadge.dataset.state = runtimeState;
-  dom.runtimeBadge.textContent = runtimeLabel(runtimeState);
-  dom.headline.textContent = snapshot.highlights?.headline || 'Transcript synced';
-  dom.summary.textContent = snapshot.highlights?.summary || 'Watching your Codex workspace in real time.';
-  dom.toolLabel.textContent = currentToolLabel(snapshot);
-  dom.debugLabel.textContent = truncate(snapshot.runtime?.lastError?.headline || snapshot.highlights?.debug || 'No recent errors', 32);
-  dom.gitLabel.textContent = gitSummary(snapshot.workspace);
-  dom.feedLabel.textContent = feedSummary(snapshot.feed);
-  dom.projectBadge.textContent = snapshot.ok
-    ? `Watching ${formatProjectLabel(snapshot)}`
-    : snapshot.error || 'Connect a workspace folder to follow the latest Codex session.';
+  if (dom.pxStatusLabel) {
+    dom.pxStatusLabel.textContent = runtimeState === 'error' ? 'Disconnected' : `Sync: ${formatProjectLabel(snapshot)}`;
+  }
 
   renderRecentProjects(snapshot.recentProjects || []);
 
@@ -2996,17 +3031,53 @@ function renderDashboard() {
   }
 }
 
-// IDE selector
-for (const btn of dom.ideSelector?.querySelectorAll('.ide-option') || []) {
-  btn.addEventListener('click', () => {
-    switchIde(btn.dataset.ide);
-  });
-}
+document.getElementById('pxZoomIn')?.addEventListener('click', () => mapZoomOffset += 1);
+document.getElementById('pxZoomOut')?.addEventListener('click', () => mapZoomOffset = Math.max(-5, mapZoomOffset - 1));
 
-dom.connectForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  state.inputDirty = false;
-  sendConnect(dom.workspaceInput.value.trim());
+document.getElementById('pxBtnAgent')?.addEventListener('click', () => { 
+  document.querySelectorAll('.px-btn').forEach(b => b.classList.remove('px-btn--active'));
+  document.getElementById('pxBtnAgent')?.classList.add('px-btn--active');
+  if (window.__PIXEL_LAB_VSCODE__) {
+    window.__PIXEL_LAB_POST({ type: 'open-terminal' });
+  } else {
+    openMenu('shop'); 
+  }
+});
+document.getElementById('pxBtnSubAgent')?.addEventListener('click', () => { 
+  document.querySelectorAll('.px-btn').forEach(b => b.classList.remove('px-btn--active'));
+  document.getElementById('pxBtnSubAgent')?.classList.add('px-btn--active');
+  if (window.__PIXEL_LAB_VSCODE__) {
+    window.__PIXEL_LAB_POST({ type: 'open-sub-agent' });
+  }
+});
+document.getElementById('pxBtnLayout')?.addEventListener('click', () => { 
+  document.querySelectorAll('.px-btn').forEach(b => b.classList.remove('px-btn--active'));
+  document.getElementById('pxBtnLayout')?.classList.add('px-btn--active');
+  openMenu('scenes'); 
+});
+document.getElementById('pxBtnSettings')?.addEventListener('click', () => { 
+  document.querySelectorAll('.px-btn').forEach(b => b.classList.remove('px-btn--active'));
+  document.getElementById('pxBtnSettings')?.classList.add('px-btn--active');
+  openProfile('codex'); 
+});
+
+// Allow panning with mouse drag
+let isDragging = false;
+let lastX = 0, lastY = 0;
+
+dom.stage.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+window.addEventListener('mouseup', () => { isDragging = false; });
+window.addEventListener('mousemove', (e) => {
+  if (isDragging) {
+    mapPanX += (e.clientX - lastX);
+    mapPanY += (e.clientY - lastY);
+    lastX = e.clientX;
+    lastY = e.clientY;
+  }
 });
 
 dom.workspaceInput.addEventListener('input', () => {

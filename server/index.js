@@ -6,11 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 
 import { collectWorkspaceInsights } from './lib/workspace-insights.js';
-import { findLatestSessionForWorkspace, listRecentProjects } from './lib/session-index.js';
-import { TranscriptTailer } from './lib/transcript-tailer.js';
-import { CodexTranscriptModel } from './lib/transcript-model.js';
+import { getAdapter, listAvailableIdes, getDefaultIdeId } from './lib/adapters/adapter-registry.js';
 import { GitHubProfileService } from './lib/github-profile.js';
-import { defaultCodexHome, displayPath } from './lib/utils.js';
+import { displayPath } from './lib/utils.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +17,8 @@ const publicDir = path.join(projectRoot, 'public');
 
 class CodexPixelBridge {
   constructor() {
-    this.codexHome = defaultCodexHome();
+    this.currentIdeId = getDefaultIdeId();
+    this.adapter = getAdapter(this.currentIdeId);
     this.recentProjects = [];
     this.requestedWorkspace = '';
     this.currentSession = null;
@@ -46,22 +45,22 @@ class CodexPixelBridge {
   }
 
   async refreshRecentProjects() {
-    this.recentProjects = listRecentProjects(this.codexHome);
+    this.recentProjects = this.adapter.listRecentProjects();
   }
 
   async connectToWorkspace(workspacePath) {
     this.requestedWorkspace = displayPath(workspacePath || '');
     this.connectionError = null;
 
-    const session = findLatestSessionForWorkspace(this.requestedWorkspace, this.codexHome);
+    const session = this.adapter.findLatestSession(this.requestedWorkspace);
     if (!session) {
       this.stopLiveResources();
       this.currentSession = null;
       this.model = null;
       this.workspaceInsights = await collectWorkspaceInsights(this.requestedWorkspace);
       this.connectionError = this.requestedWorkspace
-        ? `No Codex session was found for ${this.requestedWorkspace}.`
-        : 'No Codex session was found.';
+        ? `No ${this.adapter.displayName} session was found for ${this.requestedWorkspace}.`
+        : `No ${this.adapter.displayName} session was found.`;
       this.broadcast();
       return this.buildPayload();
     }
@@ -74,10 +73,10 @@ class CodexPixelBridge {
 
     this.stopLiveResources();
     this.currentSession = session;
-    this.model = new CodexTranscriptModel(session);
+    this.model = this.adapter.createModel(session);
     this.workspaceInsights = await collectWorkspaceInsights(session.cwd);
 
-    this.tailer = new TranscriptTailer(session.filePath, (line) => {
+    this.tailer = this.adapter.createTailer(session, (line) => {
       this.model.applyLine(line);
       this.broadcast();
     });
@@ -94,7 +93,7 @@ class CodexPixelBridge {
 
   async refreshSessionBinding() {
     if (!this.requestedWorkspace) return;
-    const freshest = findLatestSessionForWorkspace(this.requestedWorkspace, this.codexHome);
+    const freshest = this.adapter.findLatestSession(this.requestedWorkspace);
     if (!freshest || !this.currentSession) return;
     if (freshest.filePath !== this.currentSession.filePath && freshest.updatedAtMs > this.currentSession.updatedAtMs) {
       await this.connectToWorkspace(this.requestedWorkspace);
@@ -117,7 +116,8 @@ class CodexPixelBridge {
       return {
         ok: false,
         error: this.connectionError,
-        codexHome: this.codexHome,
+        ide: this.currentIdeId,
+        ideName: this.adapter.displayName,
         requestedWorkspace: this.requestedWorkspace,
         recentProjects: this.recentProjects,
         workspace: this.workspaceInsights,
@@ -127,7 +127,8 @@ class CodexPixelBridge {
     return {
       ok: true,
       error: this.connectionError,
-      codexHome: this.codexHome,
+      ide: this.currentIdeId,
+      ideName: this.adapter.displayName,
       requestedWorkspace: this.requestedWorkspace || this.currentSession?.cwd || '',
       ...this.model.buildSnapshot(this.workspaceInsights, this.recentProjects),
     };
@@ -158,9 +159,30 @@ app.use(express.static(publicDir));
 app.get('/api/health', (_req, res) => {
   res.json({
     ok: true,
-    codexHome: bridge.codexHome,
+    ide: bridge.currentIdeId,
+    ideName: bridge.adapter.displayName,
     connected: !!bridge.model,
   });
+});
+
+app.get('/api/available-ides', (_req, res) => {
+  res.json({
+    ides: listAvailableIdes(),
+    current: bridge.currentIdeId,
+  });
+});
+
+app.post('/api/set-ide', async (req, res) => {
+  const ideId = req.body?.ide || getDefaultIdeId();
+  bridge.currentIdeId = ideId;
+  bridge.adapter = getAdapter(ideId);
+  bridge.stopLiveResources();
+  bridge.currentSession = null;
+  bridge.model = null;
+  bridge.recentProjects = [];
+  bridge.connectionError = null;
+  await bridge.boot();
+  res.json(bridge.buildPayload());
 });
 
 app.get('/api/recent-projects', async (_req, res) => {
@@ -229,5 +251,5 @@ const port = Number(process.env.PORT || 3000);
 
 server.listen(port, async () => {
   await bridge.boot();
-  console.log(`Codex Pixel Lab listening on http://localhost:${port}`);
+  console.log(`Pixel Lab listening on http://localhost:${port} [IDE: ${bridge.adapter.displayName}]`);
 });

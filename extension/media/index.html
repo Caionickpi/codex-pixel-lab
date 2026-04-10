@@ -14,48 +14,35 @@
   </head>
   <body>
     <main class="experience">
-      <header class="hud">
-        <div class="brand">
-          <div class="eyebrow" id="brandEyebrow">Realtime IDE office</div>
-          <h1 id="brandTitle">Pixel Lab</h1>
+      <div id="pixel-agents-ui">
+        <!-- Top Left: Title -->
+        <div class="px-title-bar">
+          <h1 class="px-title">Pixel Lab</h1>
         </div>
-        <div class="hud-chips">
-          <div class="ide-selector" id="ideSelector">
-            <button
-              class="ide-option is-active"
-              data-ide="codex"
-              id="ideOptCodex"
-              type="button"
-            >
-              Codex
-            </button>
-            <button
-              class="ide-option"
-              data-ide="antigravity"
-              id="ideOptAntigravity"
-              type="button"
-            >
-              Antigravity
-            </button>
-          </div>
-          <div class="hud-chip" id="connectionPill">Scanning sessions...</div>
-          <div class="hud-chip hud-chip--soft" id="projectPill">
-            No workspace linked
-          </div>
-          <div class="hud-chip hud-chip--soft" id="modelBadge">gpt-5.4</div>
-        </div>
-      </header>
 
-      <section class="playground">
+        <!-- Top Left: Zoom Controls -->
+        <div class="px-zoom-controls">
+          <button id="pxZoomIn" type="button" class="px-btn-zoom">+</button>
+          <button id="pxZoomOut" type="button" class="px-btn-zoom">−</button>
+        </div>
+
+        <!-- Bottom Left: Action Menu -->
+        <div class="px-action-menu">
+          <button id="pxBtnAgent" type="button" class="px-btn px-btn--active">+ Agent</button>
+          <button id="pxBtnSubAgent" type="button" class="px-btn">+ Sub-Agent</button>
+          <button id="pxBtnLayout" type="button" class="px-btn">Layout</button>
+          <button id="pxBtnSettings" type="button" class="px-btn">Settings</button>
+        </div>
+
+        <!-- Bottom Right: Version Tag -->
+        <div class="px-version-tag">V1.2</div>
+        
+        <!-- Status floating indicator (subtle) -->
+        <div class="px-status-indicator" id="pxStatusLabel">Connecting...</div>
+      </div>
+
+      <section class="playground px-fullscreen-canvas">
         <div class="stage-shell">
-          <button class="menu-fab" id="menuButton" type="button">
-            <span class="menu-fab-icon">[]</span>
-            <span class="menu-fab-copy">
-              <strong>Menu</strong>
-              <span>Shop and scenes</span>
-            </span>
-          </button>
-
           <div class="stage-frame">
             <div class="stage" id="stage">
               <canvas id="officeCanvas"></canvas>
@@ -63,113 +50,24 @@
             </div>
           </div>
         </div>
-
-        <section class="control-bar">
-          <div class="control-status">
-            <div class="runtime-pill" id="runtimeBadge">Idle</div>
-            <div class="control-project" id="projectBadge">
-              No project linked
-            </div>
-          </div>
-          <form id="connectForm" class="connect-form">
-            <input
-              id="workspaceInput"
-              class="pixel-input"
-              placeholder="D:\Projects\MyApp"
-            />
-            <button type="submit" class="pixel-button">Connect</button>
-            <button
-              type="button"
-              class="pixel-button pixel-button--ghost"
-              id="latestButton"
-            >
-              Latest
-            </button>
-          </form>
-        </section>
-
-        <section class="info-rail">
-          <article class="info-panel info-panel--activity">
-            <div class="info-kicker">Activity</div>
-            <h2 class="info-title" id="headline">Transcript synced</h2>
-            <p class="info-copy" id="summary">
-              Watching your Codex workspace in real time.
-            </p>
-            <div class="activity-meta">
-              <span class="activity-pill" id="toolLabel">Idle</span>
-              <span class="activity-pill" id="debugLabel"
-                >No recent errors</span
-              >
-              <span class="activity-pill" id="gitLabel">Workspace linked</span>
-              <span class="activity-pill" id="feedLabel"
-                >Waiting for activity</span
-              >
-            </div>
-          </article>
-
-          <article class="info-panel info-panel--progress">
-            <div class="track-stack">
-              <div class="track-card track-card--dev">
-                <div class="track-head">
-                  <span class="info-kicker">Dev XP</span>
-                  <strong id="devTrackLevel">Level 1</strong>
-                </div>
-                <div class="track-bar">
-                  <div class="track-bar-fill" id="devTrackFill"></div>
-                </div>
-                <div class="track-meta">
-                  <span id="devTrackCurrent">0 commits</span>
-                  <span id="devTrackNext">0 to next</span>
-                </div>
-              </div>
-              <div class="track-card track-card--office">
-                <div class="track-head">
-                  <span class="info-kicker">HQ XP</span>
-                  <strong id="officeTrackLevel">Workbench Den</strong>
-                </div>
-                <div class="track-bar">
-                  <div class="track-bar-fill" id="officeTrackFill"></div>
-                </div>
-                <div class="track-meta">
-                  <span id="officeTrackCurrent">0 studio XP</span>
-                  <span id="officeTrackNext">0 to next</span>
-                </div>
-              </div>
-            </div>
-            <div class="track-next" id="nextUnlockLabel">
-              Next unlock: Starter Loft
-            </div>
-          </article>
-
-          <button class="player-glance" id="playerGlance" type="button">
-            <img class="player-avatar" id="playerAvatarMini" alt="" />
-            <div class="player-glance-copy">
-              <span class="info-kicker">Player</span>
-              <strong id="playerNameMini">Loading GitHub profile...</strong>
-              <span id="playerLevelMini">Level 1</span>
-              <div class="player-glance-progress">
-                <div
-                  class="player-glance-progress-fill"
-                  id="playerGlanceFill"
-                ></div>
-              </div>
-            </div>
-            <div class="player-glance-meta">
-              <span class="player-glance-commits" id="playerCommitMini"
-                >0 commits</span
-              >
-              <span class="player-glance-coins" id="playerCoinMini"
-                >0 coins</span
-              >
-              <span class="player-glance-next" id="playerGlanceNext"
-                >0 to next</span
-              >
-            </div>
-          </button>
-        </section>
-
-        <div class="recent-projects" id="recentProjects"></div>
       </section>
+
+      <!-- Old hidden elements kept for compatibility for scripts to not crash -->
+      <div style="display: none;">
+        <div id="ideSelector"><button class="ide-option" data-ide="codex"></button><button class="ide-option" data-ide="antigravity"></button></div>
+        <div id="connectionPill"></div><div id="projectPill"></div><div id="modelBadge"></div>
+        <button id="menuButton"></button>
+        <div id="runtimeBadge"></div><div id="projectBadge"></div>
+        <form id="connectForm"><input id="workspaceInput"/><button id="latestButton"></button></form>
+        <div id="headline"></div><div id="summary"></div>
+        <div id="toolLabel"></div><div id="debugLabel"></div><div id="gitLabel"></div><div id="feedLabel"></div>
+        <div id="devTrackLevel"></div><div id="devTrackFill"></div><div id="devTrackCurrent"></div><div id="devTrackNext"></div>
+        <div id="officeTrackLevel"></div><div id="officeTrackFill"></div><div id="officeTrackCurrent"></div><div id="officeTrackNext"></div>
+        <div id="nextUnlockLabel"></div>
+        <button id="playerGlance"><img id="playerAvatarMini"/><div id="playerNameMini"></div><div id="playerLevelMini"></div><div id="playerGlanceFill"></div><div id="playerCommitMini"></div><div id="playerCoinMini"></div><div id="playerGlanceNext"></div></button>
+        <div id="recentProjects"></div>
+        <div id="brandEyebrow"></div><div id="brandTitle"></div>
+      </div>
     </main>
 
     <section class="profile-modal" id="profileModal" hidden>

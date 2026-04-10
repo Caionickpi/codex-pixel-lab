@@ -23,6 +23,10 @@ export function defaultCodexHome() {
   return path.resolve(process.env.CODEX_HOME || path.join(os.homedir(), '.codex'));
 }
 
+export function defaultAntigravityHome() {
+  return path.resolve(process.env.ANTIGRAVITY_HOME || path.join(os.homedir(), '.gemini', 'antigravity'));
+}
+
 export function truncate(value, max = 96) {
   const text = String(value || '').trim();
   if (text.length <= max) return text;
