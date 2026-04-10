@@ -127,30 +127,35 @@ That means balancing two things at the same time:
 - utility: the scene has to communicate real work state
 - delight: the room has to feel expressive enough that developers want to keep it open
 
-## Local development
+## 🛠️ Instalação e Uso (VS Code Extension)
 
-### Requirements
+O Pixel Lab agora funciona exclusivamente como uma extensão do VS Code para garantir total integração com seus terminais Gemini.
 
-- Node.js
-- Codex Desktop installed locally
-- `gh auth login` completed if you want player progression from GitHub
+### Pré-requisitos
 
-### Run
+- **VS Code**: Versão 1.85.0 ou superior.
+- **Node.js**: Para o build inicial (opcional se você já tiver o `.vsix`).
+- **Codex Desktop**: Instalado e rodando localmente.
 
-```bash
-npm install
-npm run dev
-```
+### Como Rodar
 
-Open [http://localhost:3000](http://localhost:3000).
+1.  **Clone o repositório**: `git clone https://github.com/Caionickpi/codex-pixel-lab.git`
+2.  **Acesse a pasta da extensão**: `cd extension`
+3.  **Instale as dependências**: `npm install`
+4.  **Gere o pacote**: `npm run package` (Isso criará um arquivo `.vsix`).
+5.  **Instale no VS Code**:
+    - Vá na aba de extensões (`Ctrl+Shift+X`).
+    - Clique nos três pontos (`...`) no canto superior direito.
+    - Selecione "Install from VSIX..." e escolha o arquivo gerado.
 
-### Connect a workspace
+### Como Usar
 
-1. Open the app.
-2. Paste the project path you are currently using in Codex.
-3. Click `Connect`, or use `Latest`.
+1. Abra o Pixel Lab clicando no ícone do controle na barra lateral esquerda ou pelo comando `Pixel Lab: Abrir Pixel Lab`.
+2. Clique em **Conectar Workspace** para sincronizar com seu projeto atual.
+3. Abra um terminal e digite `gemini` para ver seus agentes ganharem vida no escritório!
 
-The bridge finds the latest Codex transcript whose `cwd` matches that project and starts streaming it into the office.
+> [!TIP]
+> Você pode abrir o Pixel Lab tanto na barra lateral (Sidebar) quanto em um painel central maior para uma visão mais detalhada.
 
 ## Repo roadmap
 
