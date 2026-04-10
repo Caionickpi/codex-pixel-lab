@@ -1,8 +1,8 @@
-# Codex Pixel Lab
+# Pixel Lab (Antigravity Edition)
 
-Codex Pixel Lab is a real-time pixel office for Codex Desktop.
+Pixel Lab is a real-time pixel office for VS Code and Antigravity agents.
 
-It watches local Codex session transcripts, turns active work into live in-world agents, and frames software development as a cozy, playful, progression-driven dev RPG.
+It watches your local terminal and IDE activity, turning active work into live in-world agents, and frames software development as a cozy, playful dev RPG.
 
 ### 🚀 Now with VS Code Extension
 
@@ -13,12 +13,12 @@ Pixel Lab is now fully integrated into VS Code, allowing you to watch your agent
 ## Why this exists
 
 Most AI coding interfaces still feel like logs, terminals, and status text.
-Codex Pixel Lab explores a different direction:
+Pixel Lab explores a different direction:
 
 - make the AI workflow visible
 - make the current project feel alive
 - turn debugging, coding, and iteration into a readable scene
-- give developers identity, progression, and a room that evolves with their work
+- give developers a visual representation of their AI workflow
 
 The goal is not a novelty dashboard.
 The goal is a small product loop that feels fun enough to revisit and expressive enough to share.
@@ -32,43 +32,38 @@ The goal is a small product loop that feels fun enough to revisit and expressive
 
 ## Core idea
 
-The system maps a live Codex session into a pixel world:
+The system maps a live Gemini session into a pixel world:
 
-- `Codex` acts as the builder and reflects active implementation work
-- `Trace` acts as the debugger and focuses on command output, checks, and failures
-- `Scout` acts as the watcher and tracks project state, git cleanliness, and workspace context
+- The Main Agent acts as the builder and reflects active implementation work
+- Drones/Sub-Agents act as watchers and debuggers, tracking project state and working in the background
 
 Each agent speaks in short, useful status bubbles.
-The office reacts to runtime state, player level, and unlocks.
+The office reacts to runtime state, file reads, and tool execution.
 
 ## Product pillars
 
 ### 1. Live development scene
 
-The office is synced to the project currently being worked on in Codex.
+The office is synced to your current VS Code workspace.
 
-- latest matching session is resolved from local Codex transcript files
-- shell commands, commentary, and runtime state feed the scene
-- characters move, react, and expose meaningful status in-world
+- Shell commands, terminal output, and runtime state feed the scene
+- Characters move, react, and expose meaningful status in-world
 - **Gemini Integration**: 100% synchronization with Gemini terminals, spawning character actions in real-time.
+- **Antigravity Adapter**: Enhanced animations for thinking, coding, reading files, and resolving errors.
 
-### 2. Developer identity
+### 2. Developer progression
 
-The player profile is linked to GitHub through the local `gh` CLI.
-
-- commit count becomes progression XP
-- levels unlock scenes, titles, and upgrades
-- clicking an in-world character opens a full player profile
+- Work in your IDE and watch your office evolve
+- Unlock new desks and upgrades as your agents process more tasks
 
 ### 3. Dev RPG progression
 
 The intended long-term loop is:
 
-1. work in Codex
-2. gain progression from real output and commits
-3. unlock titles, scenarios, hardware, and agents
-4. spend coins to evolve the office
-5. build a room worth showing to other developers
+1. Work with your Gemini agents
+2. Gain progression from real output and tool usage
+3. Unlock scenarios, hardware, and agent desks
+4. Build a room worth showing to other developers
 
 ## Current feature set
 
@@ -76,16 +71,12 @@ The intended long-term loop is:
 - **Real-time Gemini Sync**: 1:1 synchronization with Gemini terminal sessions.
 - **Antigravity Adapter**: Enhanced support for Antigravity agents with idle, thinking, and celebration animations.
 - **Clean Room Interface**: A perfectly synchronized office environment that reflects your active workspace.
-- real-time Codex transcript bridge
-- project-to-session matching by workspace path
-- pixel office rendered on a single canvas
-- agent bubbles with role-aware status text
-- bottom rail with activity, tool, debug, git, and feed summaries
-- GitHub-backed player profile and commit-based level
-- discrete in-game menu with shop, scenes, and inventory
-- interactive character click targets with profile modal
-- reactive room lighting, richer idle motion, and visual status effects
-- unlockable themes, coins, office upgrades, and character-facing progression UI
+- Pixel office rendered on a single canvas
+- Agent bubbles with role-aware status text
+- Bottom rail with activity and tool summaries
+- Interactive character click targets
+- Reactive room lighting, richer idle motion, and visual status effects
+- Unlockable aesthetic upgrades
 
 ## Progression model
 
@@ -108,13 +99,10 @@ See [docs/PROGRESSION.md](docs/PROGRESSION.md) for the full structure and future
 
 ## Architecture
 
-The app is intentionally simple:
+The extension uses two main components:
 
-- `server/` reads local Codex transcript JSONL files and exposes a WebSocket + HTTP bridge
-- `public/` renders the office, player profile, and progression UI in the browser
-- GitHub profile data is fetched from the local authenticated `gh` CLI session
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a deeper breakdown.
+- **VS Code Webview**: Renders the HTML/Canvas isometric office directly in your IDE.
+- **Node.js Bridge**: Communicates with the terminal, intercepting tool executions, reads, and agent lifecycles via the Antigravity adapter.
 
 ## Product direction
 
@@ -185,7 +173,7 @@ See [docs/ROADMAP.md](docs/ROADMAP.md) for the phased direction.
 
 Developer tools go further when they communicate identity, progress, and story.
 
-Codex Pixel Lab has a shot at becoming sticky because it combines:
+Pixel Lab has a shot at becoming sticky because it combines:
 
 - visible live utility
 - game-like progression
